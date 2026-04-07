@@ -1,0 +1,28 @@
+{
+    "name": "server",
+    "version": "1.0.0",
+    "description": "Backend for Sarah's Personal Website",
+    "main": "index.ts",
+    "scripts": {
+        "start": "ts-node index.ts",
+        "dev": "nodemon index.ts"
+    },
+    "dependencies": {
+        "@google/genai": "latest",
+        "better-sqlite3": "latest",
+        "cors": "latest",
+        "dotenv": "latest",
+        "express": "latest",
+        "multer": "latest"
+    },
+    "devDependencies": {
+        "@types/better-sqlite3": "^7.6.12",
+        "@types/cors": "^2.8.17",
+        "@types/express": "^5.0.0",
+        "@types/multer": "^1.4.12",
+        "@types/node": "^22.13.5",
+        "nodemon": "^3.1.9",
+        "ts-node": "^10.9.2",
+        "typescript": "^5.7.3"
+    }
+}
