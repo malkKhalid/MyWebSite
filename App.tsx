@@ -27,8 +27,11 @@ const AppContent = () => {
   // Visit Counter Logic (mock)
   const { incrementVisits } = useApp();
   useEffect(() => {
-    // Increment once per session reload
-    incrementVisits();
+    // Increment once per session reload (guard against StrictMode double-mount)
+    if (!(window as any).__visitCounted) {
+      (window as any).__visitCounted = true;
+      incrementVisits();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

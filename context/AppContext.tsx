@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { BlogPost, Testimonial, KnowledgeItem, PendingQuestion, Language, Skill, Project, Certification, AppSettings, SocialLink, LanguageItem, Notification, EducationItem, ExperienceCategory, ExperienceItem } from '../types';
 
-const API_URL = 'http://localhost:3001/api';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 interface AppContextType {
   language: Language;
@@ -71,17 +71,19 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 // Default Fallback Data
 const DEFAULT_SETTINGS: AppSettings = {
-  siteNameEn: 'Sarah Al-Cyber',
-  siteNameAr: 'سارة السايبر',
+  siteNameEn: 'Malk All Banna',
+  siteNameAr: 'ملك البنا',
+  fullNameEn: 'Eng. Malk Khalid All Banna',
+  fullNameAr: 'م. ملك خالد البنا',
   heroTitleEn: 'Security with Elegance',
   heroTitleAr: 'الأمان بلمسة من الأناقة',
   heroSubtitleEn: 'Information Security Engineer blending technical precision with intelligent solutions.',
-  heroSubtitleAr: 'مهندسة أمن معلومات تدمج بين الدقة التقنية والحلول الذكية.',
-  aboutTextEn: 'I am Sarah, a passionate Cybersecurity Engineer dedicated to protecting digital ecosystems from evolving threats.',
-  aboutTextAr: 'أنا سارة، مهندسة شغوفة في مجال الأمن السيبراني. أكرس وقتي لحماية الأنظمة الرقمية من التهديدات المتطورة.',
+  heroSubtitleAr: 'مهندس أمن معلومات يدمج بين الدقة التقنية والحلول الذكية.',
+  aboutTextEn: 'I am Malk, a passionate Cybersecurity Engineer dedicated to protecting digital ecosystems from evolving threats. With expertise in security analysis, penetration testing, and intelligent defense systems, I blend technical precision with elegant solutions to safeguard the digital world.',
+  aboutTextAr: 'أنا ملك البنا، مهندس أمن سيبراني متخصص في حماية الأصول الرقمية من التهديدات المتطورة. مع خبرة في التحليل الأمني واختبار الاختراق والأنظمة الدفاعية الذكية، أدمج بين الدقة التقنية والحلول الأنيقة لحماية العالم الرقمي.',
 
   primaryColorRGB: '219 39 119',
-  contactEmail: 'sarah@example.com',
+  contactEmail: 'malk@example.com',
   contactPhone: '',
   aiContext: ''
 };
@@ -117,7 +119,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [pendingQuestions, setPendingQuestions] = useState<PendingQuestion[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [totalVisits, setTotalVisits] = useState(100);
-
   // --- Fetch Data on Mount ---
   useEffect(() => {
     const fetchData = async () => {
@@ -143,7 +144,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         ]);
 
         const s = await settingsRes.json();
-        if (s) setSettings(prev => ({ ...prev, ...s }));
+        if (s) {
+          setSettings(prev => ({ ...prev, ...s }));
+          if (typeof s.totalVisits === 'number') setTotalVisits(s.totalVisits);
+        }
 
         setSocialLinks(await socialsRes.json());
         setSkills(await skillsRes.json());
@@ -345,7 +349,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     deleteData('notifications', id);
   };
 
-  const incrementVisits = () => setTotalVisits(prev => prev + 1);
+  const incrementVisits = async () => {
+    try {
+      const res = await fetch(`${API_URL}/visits/increment`, { method: 'POST' });
+      const data = await res.json();
+      if (typeof data.totalVisits === 'number') setTotalVisits(data.totalVisits);
+    } catch (e) {
+      setTotalVisits(prev => prev + 1);
+    }
+  };
 
   // Update HTML dir and class for dark mode
   useEffect(() => {

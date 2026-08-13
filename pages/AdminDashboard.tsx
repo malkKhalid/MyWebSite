@@ -117,7 +117,8 @@ const AdminDashboard: React.FC = () => {
                     descAr: newSkill.descAr || '',
                     detailsEn: newSkill.detailsEn,
                     detailsAr: newSkill.detailsAr,
-                    price: newSkill.price
+                    price: newSkill.price,
+                    image: newSkill.image
                 }]);
                 alert('Service Added Successfully!');
             }
@@ -281,6 +282,21 @@ const AdminDashboard: React.FC = () => {
             };
             reader.readAsText(file);
         }
+    };
+
+    // Raw upload helper: converts file directly to base64 WITHOUT cropping
+    const handleRawFileUpload = (e: React.ChangeEvent<HTMLInputElement>, callback: (base64: string) => void) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                if (typeof reader.result === 'string') {
+                    callback(reader.result);
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+        e.target.value = '';
     };
 
     const handleAddProject = () => {
@@ -568,6 +584,17 @@ const AdminDashboard: React.FC = () => {
 
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
+                                            <label className="block text-sm text-gray-500 mb-1">Full Name (EN)</label>
+                                            <input value={tempSettings.fullNameEn || ''} onChange={e => setTempSettings({ ...tempSettings, fullNameEn: e.target.value })} className="w-full border p-2 rounded bg-white text-gray-900" placeholder="e.g. Eng. Malk Khalid All Banna" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm text-gray-500 mb-1">Full Name (AR)</label>
+                                            <input value={tempSettings.fullNameAr || ''} onChange={e => setTempSettings({ ...tempSettings, fullNameAr: e.target.value })} className="w-full border p-2 rounded text-right bg-white text-gray-900" placeholder="مثال: م. ملك خالد البنا" />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
                                             <label className="block text-sm text-gray-500 mb-1">Site Subtitle (EN)</label>
                                             <input value={tempSettings.siteSubtitleEn || ''} onChange={e => setTempSettings({ ...tempSettings, siteSubtitleEn: e.target.value })} className="w-full border p-2 rounded bg-white text-gray-900" placeholder="e.g. CYBER SECURITY" />
                                         </div>
@@ -594,7 +621,7 @@ const AdminDashboard: React.FC = () => {
                                             <div className="flex items-center gap-2">
                                                 <label className="cursor-pointer bg-gray-100 border border-gray-300 px-3 py-2 rounded text-sm hover:bg-gray-200 flex items-center gap-2 flex-1">
                                                     <Upload className="w-4 h-4" /> Upload Profile
-                                                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, (base64) => setTempSettings({ ...tempSettings, profileImage: base64 }))} />
+                                                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, (base64) => setTempSettings({ ...tempSettings, profileImage: base64 }), 3 / 4)} />
                                                 </label>
                                                 {tempSettings.profileImage && <img src={tempSettings.profileImage} className="w-10 h-10 rounded-full object-cover border" />}
                                             </div>
@@ -742,9 +769,9 @@ const AdminDashboard: React.FC = () => {
                                             <div className="flex items-center gap-2">
                                                 <label className="cursor-pointer bg-gray-100 border border-gray-300 px-3 py-2 rounded text-sm hover:bg-gray-200 flex items-center gap-2 flex-1 justify-center">
                                                     <Upload className="w-4 h-4" /> Upload Certificate
-                                                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, (base64) => setNewEdu(prev => ({ ...prev, degreeImage: base64 })))} />
+                                                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handleRawFileUpload(e, (base64) => setNewEdu(prev => ({ ...prev, degreeImage: base64 })))} />
                                                 </label>
-                                                {newEdu.degreeImage && <img src={newEdu.degreeImage} className="w-10 h-10 object-cover border rounded" />}
+                                                {newEdu.degreeImage && <img src={newEdu.degreeImage} className="w-10 h-10 object-contain border rounded" />}
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-4">
@@ -1118,14 +1145,14 @@ const AdminDashboard: React.FC = () => {
                                         <div className="flex items-center gap-2">
                                             <label className="cursor-pointer bg-gray-100 border border-gray-300 px-3 py-2 rounded text-sm hover:bg-gray-200 flex items-center gap-2 flex-1">
                                                 <ImageIcon className="w-4 h-4" /> Upload Certificate (Image)
-                                                <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, (base64) => setNewCert({ ...newCert, imageUrl: base64 }))} />
+                                                <input type="file" accept="image/*" className="hidden" onChange={(e) => handleRawFileUpload(e, (base64) => setNewCert({ ...newCert, imageUrl: base64 }))} />
                                             </label>
-                                            {newCert.imageUrl && <img src={newCert.imageUrl} alt="cert preview" className="w-12 h-12 object-cover rounded border" />}
+                                            {newCert.imageUrl && <img src={newCert.imageUrl} alt="cert preview" className="w-12 h-12 object-contain rounded border" />}
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <label className="cursor-pointer bg-gray-100 border border-gray-300 px-3 py-2 rounded text-sm hover:bg-gray-200 flex items-center gap-2">
                                                 <ImageIcon className="w-4 h-4" /> Issuer Logo
-                                                <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, (base64) => setNewCert({ ...newCert, issuerLogo: base64 }))} />
+                                                <input type="file" accept="image/*" className="hidden" onChange={(e) => handleRawFileUpload(e, (base64) => setNewCert({ ...newCert, issuerLogo: base64 }))} />
                                             </label>
                                             {newCert.issuerLogo && <img src={newCert.issuerLogo} alt="preview" className="w-10 h-10 object-contain rounded border" />}
                                         </div>
@@ -1183,14 +1210,29 @@ const AdminDashboard: React.FC = () => {
                                         <input placeholder="Title (EN)" className="border p-2 rounded bg-white text-gray-900" value={newSkill.titleEn || ''} onChange={e => setNewSkill({ ...newSkill, titleEn: e.target.value })} />
                                         <input placeholder="Title (AR)" className="border p-2 rounded text-right bg-white text-gray-900" value={newSkill.titleAr || ''} onChange={e => setNewSkill({ ...newSkill, titleAr: e.target.value })} />
                                         <input placeholder="Price (e.g. $500)" className="border p-2 rounded bg-white text-gray-900" value={newSkill.price || ''} onChange={e => setNewSkill({ ...newSkill, price: e.target.value })} />
-                                        <select className="border p-2 rounded bg-white text-gray-900" value={newSkill.iconName} onChange={e => setNewSkill({ ...newSkill, iconName: e.target.value })}>
-                                            <option value="Shield">Shield Icon</option>
-                                            <option value="Lock">Lock Icon</option>
-                                            <option value="Terminal">Terminal Icon</option>
-                                            <option value="Eye">Eye Icon</option>
-                                            <option value="Code">Code Icon</option>
-                                            <option value="Wifi">Wifi Icon</option>
-                                        </select>
+                                        <div className="flex flex-col gap-2">
+                                            <label className="text-xs font-bold text-gray-500 uppercase">Icon</label>
+                                            <div className="flex items-center gap-2">
+                                                <select className="border p-2 rounded bg-white text-gray-900 flex-1" value={newSkill.iconName} onChange={e => setNewSkill({ ...newSkill, iconName: e.target.value })}>
+                                                    <option value="Shield">Shield Icon</option>
+                                                    <option value="Lock">Lock Icon</option>
+                                                    <option value="Terminal">Terminal Icon</option>
+                                                    <option value="Eye">Eye Icon</option>
+                                                    <option value="Code">Code Icon</option>
+                                                    <option value="Wifi">Wifi Icon</option>
+                                                </select>
+                                                <label className="cursor-pointer bg-gray-100 border border-gray-300 px-3 py-2 rounded text-sm hover:bg-gray-200 flex items-center gap-1 shrink-0" title="Upload Custom Icon">
+                                                    <ImageIcon className="w-4 h-4" /> Upload
+                                                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handleRawFileUpload(e, (base64) => setNewSkill({ ...newSkill, image: base64 }))} />
+                                                </label>
+                                            </div>
+                                            {newSkill.image && (
+                                                <div className="flex items-center gap-2 mt-1">
+                                                    <img src={newSkill.image} alt="icon preview" className="w-10 h-10 object-contain rounded border bg-white" />
+                                                    <button onClick={() => setNewSkill({ ...newSkill, image: '' })} className="text-red-500 text-xs font-bold hover:underline">Remove Custom Icon</button>
+                                                </div>
+                                            )}
+                                        </div>
                                         <textarea placeholder="Description (EN)" className="border p-2 rounded bg-white text-gray-900" value={newSkill.descEn || ''} onChange={e => setNewSkill({ ...newSkill, descEn: e.target.value })} />
                                         <textarea placeholder="Description (AR)" className="border p-2 rounded text-right bg-white text-gray-900" value={newSkill.descAr || ''} onChange={e => setNewSkill({ ...newSkill, descAr: e.target.value })} />
                                         <textarea placeholder="Details (EN)" className="border p-2 rounded bg-white text-gray-900 md:col-span-2" value={newSkill.detailsEn || ''} onChange={e => setNewSkill({ ...newSkill, detailsEn: e.target.value })} />
@@ -1202,9 +1244,15 @@ const AdminDashboard: React.FC = () => {
                                 <div className="space-y-2">
                                     {skills.map(s => (
                                         <div key={s.id} className="bg-white p-4 border rounded-lg flex justify-between items-center">
-                                            <div>
-                                                <p className="font-bold text-gray-900">{s.titleEn} / {s.titleAr}</p>
-                                                <p className="text-sm text-gray-500">{s.price}</p>
+                                            <div className="flex items-center gap-3">
+                                                {s.image
+                                                    ? <img src={s.image} alt="icon" className="w-10 h-10 object-contain rounded border bg-white p-1" />
+                                                    : <div className="w-10 h-10 bg-gray-100 rounded flex items-center justify-center text-gray-400"><ImageIcon className="w-5 h-5" /></div>
+                                                }
+                                                <div>
+                                                    <p className="font-bold text-gray-900">{s.titleEn} / {s.titleAr}</p>
+                                                    <p className="text-sm text-gray-500">{s.price}</p>
+                                                </div>
                                             </div>
                                             <div className="flex gap-2">
                                                 <button onClick={() => setNewSkill(s)} className="text-blue-500 hover:bg-blue-50 p-2 rounded"><Edit className="w-4 h-4" /></button>

@@ -26,10 +26,17 @@ const ServicesPage: React.FC = () => {
     }
   };
 
+  const renderSkillIcon = (skill: Skill) => {
+    if (skill.image) {
+      return <img src={skill.image} alt={language === 'ar' ? skill.titleAr : skill.titleEn} className="w-10 h-10 object-contain" />;
+    }
+    return getIcon(skill.iconName);
+  };
+
   const getWhatsAppLink = (skill: Skill) => {
     const text = language === 'ar' 
-      ? `مرحباً سارة، أنا مهتم بخدمة: ${skill.titleAr}. هل يمكننا مناقشة التفاصيل؟`
-      : `Hello Sarah, I am interested in the service: ${skill.titleEn}. Can we discuss details?`;
+      ? `مرحباً م. ملك البنا، أنا مهتم بخدمة: ${skill.titleAr}. هل يمكننا مناقشة التفاصيل؟`
+      : `Hello Eng. Malk, I am interested in the service: ${skill.titleEn}. Can we discuss details?`;
     return `https://wa.me/${settings.contactPhone}?text=${encodeURIComponent(text)}`;
   };
 
@@ -66,7 +73,7 @@ const ServicesPage: React.FC = () => {
             className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-xl hover:border-maroon/20 cursor-pointer transition-all duration-300 group"
           >
             <div className="mb-4 text-maroon group-hover:scale-110 transition-transform duration-300 bg-maroon/5 w-16 h-16 rounded-full flex items-center justify-center mx-auto">
-              {getIcon(skill.iconName)}
+              {renderSkillIcon(skill)}
             </div>
             <h3 className="text-xl font-semibold text-anthracite dark:text-white text-center mb-2">
               {language === 'ar' ? skill.titleAr : skill.titleEn}
@@ -104,9 +111,9 @@ const ServicesPage: React.FC = () => {
             >
               <div className="p-6 bg-gradient-to-r from-maroon to-[#5c0a22] text-white flex justify-between items-start">
                  <div className="flex items-center gap-3">
-                    <div className="bg-white/20 p-2 rounded-lg">
-                       {getIcon(selectedSkill.iconName)}
-                    </div>
+                     <div className="bg-white/20 p-2 rounded-lg">
+                       {renderSkillIcon(selectedSkill)}
+                     </div>
                     <div>
                       <h3 className="text-xl font-bold">{language === 'ar' ? selectedSkill.titleAr : selectedSkill.titleEn}</h3>
                       <p className="text-white/80 text-sm">{language === 'ar' ? selectedSkill.descAr : selectedSkill.descEn}</p>

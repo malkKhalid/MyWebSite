@@ -1,12 +1,14 @@
 {
-  "name": "sarah-al-cyber-|-security-engineer",
+  "name": "malk-personal-website",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:server": "cd server && npm run dev",
     "build": "vite build",
-    "preview": "vite preview"
+    "start": "cd server && npm run start",
+    "install:all": "npm install && cd server && npm install"
   },
   "dependencies": {
     "@google/genai": "^1.30.0",
@@ -23,5 +25,8 @@
     "@vitejs/plugin-react": "^5.0.0",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }

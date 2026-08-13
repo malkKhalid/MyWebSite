@@ -93,7 +93,7 @@ const CertificationsPage: React.FC = () => {
                                <p className="p-4 text-center text-gray-500">PDF cannot be displayed natively. <a href={selectedCert.imageUrl} download="Certificate.pdf" className="text-maroon underline">Download PDF</a></p>
                              </object>
                            ) : (
-                             <img src={selectedCert.imageUrl} alt={selectedCert.name} className="w-full h-auto object-cover max-h-60" />
+                             <img src={selectedCert.imageUrl} alt={selectedCert.name} className="w-full h-auto object-contain" />
                            )}
                        </div>
                    )}

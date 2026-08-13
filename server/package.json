@@ -1,7 +1,7 @@
 {
     "name": "server",
     "version": "1.0.0",
-    "description": "Backend for Sarah's Personal Website",
+    "description": "Backend for Malk's Personal Website",
     "main": "index.ts",
     "scripts": {
         "start": "ts-node index.ts",

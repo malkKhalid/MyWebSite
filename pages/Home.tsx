@@ -6,7 +6,8 @@ import {
   Shield, Lock, Terminal, Eye, Code, Wifi,
   ExternalLink, Github, Linkedin, Mail, MessageCircle,
   ChevronRight, Star, Download, Award, X, Upload, Check, Quote,
-  ArrowRight, Languages, CheckCircle2, User, GraduationCap, Briefcase, Globe, Calendar, Layout as LayoutIcon, FileText
+  ArrowRight, Languages, CheckCircle2, User, GraduationCap, Briefcase, Globe, Calendar, Layout as LayoutIcon, FileText,
+  MessageSquare, FolderOpen, Settings
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Skill, Certification, Testimonial } from '../types';
@@ -371,6 +372,13 @@ const Home: React.FC = () => {
     }
   };
 
+  const renderSkillIcon = (skill: Skill) => {
+    if (skill.image) {
+      return <img src={skill.image} alt={language === 'ar' ? skill.titleAr : skill.titleEn} className="w-12 h-12 object-contain" />;
+    }
+    return getIcon(skill.iconName);
+  };
+
   const handleReviewSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (newReview.nameEn && newReview.nameAr && (newReview.textEn || newReview.textAr)) {
@@ -418,21 +426,16 @@ const Home: React.FC = () => {
   const getWhatsAppLink = (skill: Skill) => {
     let text = '';
     if (language === 'ar') {
-      text = `مرحباً سارة، أنا مهتم بخدمة: ${skill.titleAr}. هل يمكننا مناقشة التفاصيل؟`;
+      text = `مرحباً م. ملك البنا، أنا مهتم بخدمة: ${skill.titleAr}. هل يمكننا مناقشة التفاصيل؟`;
     } else {
-      text = `Hello Sarah, I am interested in the service: ${skill.titleEn}. Can we discuss details ? `;
+      text = `Hello Eng. Malk, I am interested in the service: ${skill.titleEn}. Can we discuss details?`;
     }
-    return `https://wa.me/${settings.contactPhone}?text=${encodeURIComponent(text)}`;
+    return `https://wa.me/970593038780?text=${encodeURIComponent(text)}`;
   };
 
   const getEmailLink = (skill: Skill) => {
     const subject = language === 'ar' ? `استفسار خدمة: ${skill.titleAr}` : `Service Inquiry: ${skill.titleEn}`;
-    return `mailto:${settings.contactEmail}?subject=${encodeURIComponent(subject)}`;
-  };
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.2 } }
+    return `mailto:bannamalak156@gmail.com?subject=${encodeURIComponent(subject)}`;
   };
 
   const itemVariants = {
@@ -443,43 +446,68 @@ const Home: React.FC = () => {
   return (
     <div className="space-y-20 pb-20">
       {/* Hero Section */}
-      <section className="relative h-[80vh] flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-[92vh] flex items-center justify-center overflow-hidden py-16">
         {/* Background Banner with Berry/Pink Gradient & Glow */}
         <div className="absolute inset-0 flex items-center justify-center z-0">
           <div className="w-full h-2/3 bg-gradient-to-r from-[#800020] via-[#c71585] to-[#FFC0CB] opacity-10 blur-3xl transform skew-y-6 rounded-3xl"></div>
           <div className="absolute w-96 h-96 bg-maroon/20 blur-[100px] rounded-full"></div>
         </div>
 
-        <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
+        <div className="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-[auto_1fr] gap-6 lg:gap-10 items-center">
+          {/* Profile Image - Always on Left */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8 }}
+            className="flex justify-center md:justify-start"
           >
-            {/* Profile Image with Separated Spin Animation */}
-            <div className="relative w-40 h-40 mx-auto mb-8">
-              {/* Spinning Border */}
-              <div className="absolute inset-0 rounded-full p-1 bg-gradient-to-r from-maroon via-lavender to-maroon animate-spin-slow"></div>
-
-              {/* Static Image */}
-              <div className="absolute inset-1 bg-white dark:bg-gray-800 rounded-full overflow-hidden border-2 border-white dark:border-gray-800 z-10">
-                <img
-                  src={settings.profileImage}
-                  alt="Profile"
-                  className="w-full h-full object-cover"
-                />
+            <div className="relative w-56 sm:w-64 lg:w-72 aspect-[3/4] rounded-3xl p-[4px] overflow-hidden shadow-[0_0_40px_rgb(var(--color-primary)/0.35)]">
+              {/* Rotating Light Border */}
+              <div className="absolute -inset-[150%] animate-border-flow bg-[conic-gradient(from_0deg,rgb(var(--color-primary))_0deg,rgb(var(--color-primary))_70deg,transparent_130deg,transparent_230deg,#C8A2C8_300deg,transparent_360deg)]"></div>
+              {/* Static Inner Image */}
+              <div className="relative h-full w-full rounded-[calc(1.5rem-4px)] overflow-hidden bg-gradient-to-br from-maroon/10 to-lavender/10 dark:bg-gray-800">
+                {settings.profileImage ? (
+                  <img
+                    src={settings.profileImage}
+                    alt="Profile"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <User className="w-24 h-24 text-maroon/30" />
+                  </div>
+                )}
+                <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/50 to-transparent"></div>
               </div>
             </div>
+          </motion.div>
 
-            <h1 className="text-4xl md:text-6xl font-bold text-anthracite dark:text-white mb-4 tracking-tight">
-              {language === 'ar' ? settings.heroTitleAr : settings.heroTitleEn}
+          {/* Name, Role & About */}
+          <motion.div
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+          >
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-display font-bold text-anthracite dark:text-white mb-3 leading-tight whitespace-nowrap">
+              {language === 'ar' ? (settings.fullNameAr || settings.siteNameAr) : (settings.fullNameEn || settings.siteNameEn)}
             </h1>
-            <p className="text-xl text-gray-500 dark:text-gray-300 mb-8 font-light max-w-2xl mx-auto leading-relaxed">
-              {language === 'ar' ? settings.heroSubtitleAr : settings.heroSubtitleEn}
+
+            <p className="text-lg md:text-xl text-maroon font-semibold mb-5">
+              {language === 'ar' ? (settings.heroTitleAr || settings.heroSubtitleAr) : (settings.heroTitleEn || settings.heroSubtitleEn)}
             </p>
 
+            {/* About Me Blurb with Icon */}
+            <div className="flex items-start gap-3 p-5 rounded-2xl bg-white/70 dark:bg-gray-800/70 backdrop-blur border border-pink-200 dark:border-pink-900/40 shadow-[0_0_20px_rgba(236,72,153,0.12)] mb-6">
+              <div className="shrink-0 p-2.5 bg-maroon/5 rounded-full text-maroon">
+                <User className="w-5 h-5" />
+              </div>
+              <p className="text-gray-600 dark:text-gray-300 leading-relaxed text-sm md:text-base" style={language === 'ar' ? { textAlign: 'right' } : { textAlign: 'left' }}>
+                {language === 'ar' ? settings.aboutTextAr : settings.aboutTextEn}
+              </p>
+            </div>
+
             {/* Stats Bar */}
-            <div className="inline-flex items-center gap-4 bg-white/80 dark:bg-gray-800/80 backdrop-blur px-6 py-2 rounded-full shadow-md border border-gray-100 dark:border-gray-700">
+            <div className="inline-flex items-center gap-4 bg-white/80 dark:bg-gray-800/80 backdrop-blur px-6 py-2.5 rounded-full shadow-md border border-gray-100 dark:border-gray-700">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                 <span className="text-xs font-mono text-gray-400 uppercase tracking-widest">{t.stats}</span>
@@ -490,37 +518,23 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* About Me Section */}
-      <section id="about" className="max-w-4xl mx-auto px-4">
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          variants={containerVariants}
-          className="text-center"
-        >
-          <div className="inline-block p-3 bg-maroon/5 rounded-full text-maroon mb-4">
-            <User className="w-6 h-6" />
-          </div>
-          <h2 className="text-3xl font-bold text-maroon mb-6">{t.about}</h2>
-          <p className="text-lg text-gray-600 dark:text-gray-300 leading-relaxed">
-            {language === 'ar' ? settings.aboutTextAr : settings.aboutTextEn}
-          </p>
-        </motion.div>
-      </section>
-
-      {/* Education Section - Improved Side-by-Side Layout */}
-      {/* Education Section - Centered Layout with Styled Header */}
-
-
       {/* Experience Section */}
       <section id="experience" className="max-w-4xl mx-auto px-4">
-        <div className="text-center mb-16">
-          <div className="inline-flex items-center justify-center p-3 bg-maroon/5 rounded-full text-maroon mb-4">
-            <Briefcase className="w-6 h-6" />
+        <div className="mb-16">
+          <div className="flex items-center gap-3 mb-4 w-full" style={language === 'ar' ? { direction: 'rtl', justifyContent: 'flex-start' } : {}}>
+            {language === 'ar' ? (
+              <>
+                <Briefcase className="w-6 h-6 text-maroon shrink-0" />
+                <h2 className="text-3xl font-bold text-maroon">الخبرات المهنية</h2>
+              </>
+            ) : (
+              <>
+                <Briefcase className="w-6 h-6 text-maroon shrink-0" />
+                <h2 className="text-3xl font-bold text-maroon">Professional Experience</h2>
+              </>
+            )}
           </div>
-          <h2 className="text-3xl font-bold text-maroon mb-4">{language === 'ar' ? 'الخبرات المهنية' : 'Professional Experience'}</h2>
-          <div className="w-20 h-1 bg-maroon mx-auto rounded-full opacity-30"></div>
+          <div className={`w-20 h-1 bg-maroon rounded-full opacity-30 ${language === 'ar' ? 'ml-auto' : 'mr-auto'}`}></div>
         </div>
 
         <div className="space-y-4">
@@ -595,20 +609,17 @@ const Home: React.FC = () => {
             initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            className="md:w-1/3 md:sticky md:top-32 text-center md:text-left rtl:md:text-right"
+            className="md:w-1/4 md:sticky md:top-32"
           >
-            <div className="flex flex-col items-center md:items-start rtl:md:items-end justify-center mb-6">
-              <div className="inline-block text-maroon mb-1 mx-auto md:mx-0 rtl:md:mr-0 rtl:md:ml-auto">
-                <GraduationCap className="w-12 h-12" />
-              </div>
-              <h2 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-maroon to-pink-600 pt-2 pb-3 mb-6 font-display leading-tight min-h-[1.5em]">
-                {language === 'ar' ? 'التعليم الأكاديمي' : 'Education'}
-              </h2>
-              <div className="w-24 h-1 bg-gradient-to-r from-maroon to-pink-600 rounded-full mx-auto md:mx-0 rtl:md:mr-0 rtl:md:ml-auto"></div>
+            <div className={`flex flex-col gap-2 mb-4 ${language === 'ar' ? 'items-end' : 'items-start'}`}>
+              <GraduationCap className="w-10 h-10 text-maroon" />
+              <h2 className="text-3xl font-bold text-maroon">{language === 'ar' ? 'التعليم' : 'Education'}</h2>
+              <h2 className="text-3xl font-bold text-maroon">{language === 'ar' ? 'الأكاديمي' : ''}</h2>
             </div>
+            <div className={`w-20 h-1 bg-maroon rounded-full opacity-30 ${language === 'ar' ? 'ml-auto' : 'mr-auto'}`}></div>
           </motion.div>
 
-          <div className="md:w-2/3 grid grid-cols-1 gap-8">
+          <div className="md:w-3/4 grid grid-cols-1 gap-8">
             {[...educationList].sort((a,b) => (a.orderNum||0) - (b.orderNum||0)).map((edu, idx) => (
               <EducationCard
                 key={edu.id}
@@ -624,9 +635,21 @@ const Home: React.FC = () => {
       </section>
 
       <section id="services" className="max-w-7xl mx-auto px-4">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl font-bold text-maroon mb-4">{t.skills}</h2>
-          <div className="w-20 h-1 bg-maroon mx-auto rounded-full opacity-30"></div>
+        <div className="mb-16">
+          <div className="flex items-center gap-3 mb-4 w-full" style={language === 'ar' ? { direction: 'rtl', justifyContent: 'flex-start' } : {}}>
+            {language === 'ar' ? (
+              <>
+                <Settings className="w-6 h-6 text-maroon shrink-0" />
+                <h2 className="text-3xl font-bold text-maroon">{t.skills}</h2>
+              </>
+            ) : (
+              <>
+                <Settings className="w-6 h-6 text-maroon shrink-0" />
+                <h2 className="text-3xl font-bold text-maroon">{t.skills}</h2>
+              </>
+            )}
+          </div>
+          <div className={`w-20 h-1 bg-maroon rounded-full opacity-30 ${language === 'ar' ? 'ml-auto' : 'mr-auto'}`}></div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -641,7 +664,7 @@ const Home: React.FC = () => {
               className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-[0_0_15px_rgba(236,72,153,0.1)] border-2 border-pink-200 dark:border-pink-900/50 hover:border-pink-500 hover:shadow-[0_0_30px_rgba(236,72,153,0.4)] transition-all duration-300 cursor-pointer group text-center relative overflow-hidden"
             >
               <div className="mb-6 inline-block p-4 bg-maroon/5 rounded-full text-maroon group-hover:scale-110 transition-transform duration-300">
-                {getIcon(skill.iconName)}
+                {renderSkillIcon(skill)}
               </div>
               <h3 className="text-xl font-semibold mb-3 text-anthracite dark:text-white group-hover:text-maroon transition-colors">
                 {language === 'ar' ? skill.titleAr : skill.titleEn}
@@ -667,9 +690,21 @@ const Home: React.FC = () => {
 
       {/* Featured Projects Section */}
       <section id="projects" className="max-w-7xl mx-auto px-4 bg-gray-50 dark:bg-gray-800/30 py-20 rounded-3xl">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl font-bold text-maroon mb-4">{t.projects}</h2>
-          <div className="w-20 h-1 bg-maroon mx-auto rounded-full opacity-30"></div>
+        <div className="mb-16">
+          <div className="flex items-center gap-3 mb-4 w-full" style={language === 'ar' ? { direction: 'rtl', justifyContent: 'flex-start' } : {}}>
+            {language === 'ar' ? (
+              <>
+                <FolderOpen className="w-6 h-6 text-maroon shrink-0" />
+                <h2 className="text-3xl font-bold text-maroon">{t.projects}</h2>
+              </>
+            ) : (
+              <>
+                <FolderOpen className="w-6 h-6 text-maroon shrink-0" />
+                <h2 className="text-3xl font-bold text-maroon">{t.projects}</h2>
+              </>
+            )}
+          </div>
+          <div className={`w-20 h-1 bg-maroon rounded-full opacity-30 ${language === 'ar' ? 'ml-auto' : 'mr-auto'}`}></div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
@@ -716,17 +751,29 @@ const Home: React.FC = () => {
         </div>
 
         <div className="text-center">
-          <Link to="/projects" className="inline-flex items-center gap-2 text-maroon font-bold hover:underline">
+          <Link to="/projects" className="inline-flex items-center gap-2 bg-maroon text-white px-8 py-3 rounded-full font-bold hover:bg-[#7a0d2d] transition-all shadow-lg shadow-maroon/20">
             {t.viewAll} <ArrowRight className={`w-4 h-4 ${language === 'ar' ? 'rotate-180' : ''}`} />
           </Link>
         </div>
       </section>
 
-      {/* Certifications Section - Reverted to Light/Standard Design */}
+      {/* Certifications Section */}
       <section id="certifications" className="max-w-7xl mx-auto px-4">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl font-bold text-maroon mb-4">{t.certs}</h2>
-          <div className="w-20 h-1 bg-maroon mx-auto rounded-full opacity-30"></div>
+        <div className="mb-16">
+          <div className="flex items-center gap-3 mb-4 w-full" style={language === 'ar' ? { direction: 'rtl', justifyContent: 'flex-start' } : {}}>
+            {language === 'ar' ? (
+              <>
+                <Award className="w-6 h-6 text-maroon shrink-0" />
+                <h2 className="text-3xl font-bold text-maroon">{t.certs}</h2>
+              </>
+            ) : (
+              <>
+                <Award className="w-6 h-6 text-maroon shrink-0" />
+                <h2 className="text-3xl font-bold text-maroon">{t.certs}</h2>
+              </>
+            )}
+          </div>
+          <div className={`w-20 h-1 bg-maroon rounded-full opacity-30 ${language === 'ar' ? 'ml-auto' : 'mr-auto'}`}></div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
@@ -759,7 +806,7 @@ const Home: React.FC = () => {
         </div>
 
         <div className="text-center">
-          <Link to="/certifications" className="inline-flex items-center gap-2 text-maroon font-bold hover:underline">
+          <Link to="/certifications" className="inline-flex items-center gap-2 bg-maroon text-white px-8 py-3 rounded-full font-bold hover:bg-[#7a0d2d] transition-all shadow-lg shadow-maroon/20">
             {t.viewAll} <ArrowRight className={`w-4 h-4 ${language === 'ar' ? 'rotate-180' : ''}`} />
           </Link>
         </div>
@@ -767,11 +814,21 @@ const Home: React.FC = () => {
 
       {/* Languages Section */}
       <section id="languages" className="max-w-4xl mx-auto px-4">
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center p-3 bg-maroon/5 rounded-full text-maroon mb-4">
-            <Languages className="w-6 h-6" />
+        <div className="mb-10">
+          <div className="flex items-center gap-3 mb-4 w-full" style={language === 'ar' ? { direction: 'rtl', justifyContent: 'flex-start' } : {}}>
+            {language === 'ar' ? (
+              <>
+                <Languages className="w-6 h-6 text-maroon shrink-0" />
+                <h2 className="text-2xl font-bold text-maroon">{t.languages}</h2>
+              </>
+            ) : (
+              <>
+                <Languages className="w-6 h-6 text-maroon shrink-0" />
+                <h2 className="text-2xl font-bold text-maroon">{t.languages}</h2>
+              </>
+            )}
           </div>
-          <h2 className="text-2xl font-bold text-anthracite dark:text-white">{t.languages}</h2>
+          <div className={`w-20 h-1 bg-maroon rounded-full opacity-30 ${language === 'ar' ? 'ml-auto' : 'mr-auto'}`}></div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -799,7 +856,10 @@ const Home: React.FC = () => {
       {/* Testimonials Section */}
       <section className="max-w-6xl mx-auto px-4 py-16">
         <div className="text-center mb-16">
-          <h2 className="text-3xl font-bold text-maroon mb-4">{t.endorsements}</h2>
+          <div className="inline-flex items-center justify-center gap-3 mb-4">
+            <MessageSquare className="w-6 h-6 text-maroon" />
+            <h2 className="text-3xl font-bold text-maroon">{t.endorsements}</h2>
+          </div>
           <div className="w-20 h-1 bg-maroon mx-auto rounded-full opacity-30"></div>
         </div>
 
@@ -970,7 +1030,7 @@ const Home: React.FC = () => {
               <div className="p-6 bg-gradient-to-r from-maroon to-[#5c0a22] text-white flex justify-between items-start">
                 <div className="flex items-center gap-3">
                   <div className="bg-white/20 p-2 rounded-lg">
-                    {getIcon(selectedSkill.iconName)}
+                    {renderSkillIcon(selectedSkill)}
                   </div>
                   <div>
                     <h3 className="text-xl font-bold">{language === 'ar' ? selectedSkill.titleAr : selectedSkill.titleEn}</h3>
@@ -1047,8 +1107,12 @@ const Home: React.FC = () => {
 
               <div className="overflow-y-auto">
                 <div className="text-center mb-6 pt-4">
-                  <div className="w-16 h-16 bg-maroon/10 rounded-full flex items-center justify-center mx-auto mb-4 text-maroon">
-                    <Award className="w-8 h-8" />
+                  <div className="w-16 h-16 bg-maroon/10 rounded-full flex items-center justify-center mx-auto mb-4 text-maroon overflow-hidden">
+                    {selectedCert.issuerLogo ? (
+                      <img src={selectedCert.issuerLogo} alt={selectedCert.org} className="w-full h-full object-contain p-1" />
+                    ) : (
+                      <Award className="w-8 h-8" />
+                    )}
                   </div>
                   <h3 className="text-xl font-bold text-anthracite dark:text-white">{selectedCert.name}</h3>
                   <p className="text-gray-500 dark:text-gray-400">{selectedCert.org} • {selectedCert.date}</p>
@@ -1061,7 +1125,7 @@ const Home: React.FC = () => {
                         <p className="p-4 text-center text-gray-500">PDF cannot be displayed natively. <a href={selectedCert.imageUrl} download="Certificate.pdf" className="text-maroon underline">Download PDF</a></p>
                       </object>
                     ) : (
-                      <img src={selectedCert.imageUrl} alt={selectedCert.name} className="w-full h-full object-cover max-h-60" />
+                      <img src={selectedCert.imageUrl} alt={selectedCert.name} className="w-full h-auto object-contain" />
                     )}
                   </div>
                 )}

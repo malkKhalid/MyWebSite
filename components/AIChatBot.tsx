@@ -12,8 +12,8 @@ const AIChatBot: React.FC = () => {
     {
       role: 'ai',
       text: language === 'ar'
-        ? 'مرحباً! أنا المساعد الذكي لسارة. كيف يمكنني مساعدتك اليوم في مواضيع الأمن السيبراني؟'
-        : 'Hello! I am Sarah\'s AI Assistant. How can I help you with Cybersecurity topics today?'
+        ? 'مرحباً! أنا المساعد الذكي ل م. ملك البنا. كيف يمكنني مساعدتك اليوم ؟'
+        : 'Hello! I am Malk\'s AI Assistant. How can I help you today?'
     }
   ]);
   const [input, setInput] = useState('');
@@ -47,8 +47,8 @@ const AIChatBot: React.FC = () => {
       // Fallback: Add to pending questions which triggers notification
       addPendingQuestion(userMsg);
       const fallbackMsg = language === 'ar'
-        ? "أعتذر، ليس لدي إجابة دقيقة لهذا السؤال حالياً. لقد قمت بتدوين سؤالك وإرساله لسارة وسيتم الرد عليك قريباً."
-        : "I apologize, I don't have that specific information right now. I've sent your question to Sarah and she will review it soon.";
+        ? "أعتذر، ليس لدي إجابة دقيقة لهذا السؤال حالياً. لقد قمت بتدوين سؤالك وإرساله لم. ملك البنا وسيتم الرد عليك قريباً."
+        : "I apologize, I don't have that specific information right now. I've sent your question to Eng. Malk and he will review it soon.";
       setMessages(prev => [...prev, { role: 'ai', text: fallbackMsg }]);
     }
   };
@@ -91,7 +91,7 @@ const AIChatBot: React.FC = () => {
                   <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-400 rounded-full border border-maroon"></div>
                 </div>
                 <div>
-                  <h3 className="font-bold text-sm">Sarah's AI</h3>
+                  <h3 className="font-bold text-sm">Malk's AI</h3>
                   <p className="text-[10px] opacity-80 flex items-center gap-1">
                     <span className="w-1 h-1 bg-white rounded-full animate-pulse"></span>
                     Powered by Gemini

@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: malk-personal-website
+    runtime: node
+    plan: free
+    buildCommand: npm install && cd server && npm install && npm run build
+    startCommand: cd server && npm run start
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: VITE_GEMINI_API_KEY
+        sync: false

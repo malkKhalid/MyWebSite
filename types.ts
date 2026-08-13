@@ -134,6 +134,8 @@ export interface LanguageItem {
 export interface AppSettings {
   siteNameEn: string;
   siteNameAr: string;
+  fullNameEn?: string;
+  fullNameAr?: string;
   heroTitleEn: string;
   heroTitleAr: string;
   heroSubtitleEn: string;

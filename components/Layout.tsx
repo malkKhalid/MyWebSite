@@ -78,7 +78,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col text-anthracite font-sans dark:bg-gray-900 dark:text-gray-100 transition-colors duration-300">
+    <div className="min-h-screen flex flex-col text-anthracite font-sans dark:text-gray-100 transition-colors duration-300">
       {/* Navigation */}
       <nav className="sticky top-0 z-50 bg-off-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-lavender/30 dark:border-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -93,9 +93,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               <div>
                 <span className="block text-xl font-bold text-maroon leading-none">
                   {language === 'ar' ? settings.siteNameAr : settings.siteNameEn}
-                </span>
-                <span className="block text-xs text-anthracite dark:text-gray-400 tracking-widest uppercase">
-                  {language === 'ar' ? (settings.siteSubtitleAr || 'الأمن السيبراني') : (settings.siteSubtitleEn || 'CYBER SECURITY')}
                 </span>
               </div>
             </Link>
@@ -245,8 +242,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           <div className="w-full h-px bg-white/10 max-w-xs mx-auto mb-6"></div>
 
           <p className="text-gray-400 text-sm">
-            © {new Date().getFullYear()} {settings.copyrightOwnerName ? `${settings.copyrightOwnerName}.` : ''}
-            {language === 'ar' ? ' جميع الحقوق محفوظة.' : ' All rights reserved.'}
+            © {new Date().getFullYear()} {language === 'ar' ? 'جميع الحقوق محفوظة لدى م. ملك البنا' : 'All rights reserved. Eng. Malk All Banna'}
           </p>
 
           <div className="flex justify-center gap-4 mt-6">

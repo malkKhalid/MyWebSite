@@ -10,23 +10,34 @@ import dotenv from 'dotenv';
 dotenv.config({ path: path.join(__dirname, '../.env.local') });
 
 const app = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors());
 app.use(express.json({ limit: '50mb' })); // Increased limit for base64 images
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Serve the built frontend (production)
+const distPath = path.join(__dirname, '..', 'dist');
+if (fs.existsSync(distPath)) {
+    app.use(express.static(distPath));
+}
+
 // Initialize DB
 initDb();
 
 // Root Route
 app.get('/', (req, res) => {
-    res.send(`
-        <h1>Backend is Running! 🚀</h1>
-        <p>This is the API server. It does not have a frontend interface.</p>
-        <p>Please open the frontend at: <a href="http://localhost:5173">http://localhost:5173</a></p>
-    `);
+    const indexPath = path.join(distPath, 'index.html');
+    if (fs.existsSync(indexPath)) {
+        res.sendFile(indexPath);
+    } else {
+        res.send(`
+            <h1>Backend is Running! 🚀</h1>
+            <p>This is the API server. It does not have a frontend interface.</p>
+            <p>Please open the frontend at: <a href="http://localhost:5173">http://localhost:5173</a></p>
+        `);
+    }
 });
 
 // --- API ROUTES ---
@@ -39,18 +50,33 @@ app.get('/api/settings', (req, res) => {
 
 app.post('/api/settings', (req, res) => {
     const s = req.body;
+    const current = db.prepare('SELECT totalVisits FROM settings WHERE id = 1').get() as { totalVisits: number } | undefined;
+    const totalVisits = typeof s.totalVisits === 'number' ? s.totalVisits : (current?.totalVisits ?? 100);
     db.prepare(`
         UPDATE settings SET 
-        siteNameEn = ?, siteNameAr = ?, profileImage = ?, primaryColorRGB = ?, contactPhone = ?, aiContext = ?,
+        siteNameEn = ?, siteNameAr = ?, fullNameEn = ?, fullNameAr = ?, profileImage = ?, primaryColorRGB = ?, contactPhone = ?, aiContext = ?,
         logoImage = ?, heroSubtitleEn = ?, heroSubtitleAr = ?, siteSubtitleEn = ?, siteSubtitleAr = ?, 
-        aboutTextEn = ?, aboutTextAr = ?, copyrightOwnerName = ?, contactEmail = ?
+        aboutTextEn = ?, aboutTextAr = ?, copyrightOwnerName = ?, contactEmail = ?, totalVisits = ?
         WHERE id = 1
     `).run(
-        s.siteNameEn, s.siteNameAr, s.profileImage, s.primaryColorRGB, s.contactPhone, s.aiContext,
+        s.siteNameEn, s.siteNameAr, s.fullNameEn, s.fullNameAr, s.profileImage, s.primaryColorRGB, s.contactPhone, s.aiContext,
         s.logoImage, s.heroSubtitleEn, s.heroSubtitleAr, s.siteSubtitleEn, s.siteSubtitleAr,
-        s.aboutTextEn, s.aboutTextAr, s.copyrightOwnerName, s.contactEmail
+        s.aboutTextEn, s.aboutTextAr, s.copyrightOwnerName, s.contactEmail, totalVisits
     );
     res.json({ success: true });
+});
+
+// Visits counter
+app.get('/api/visits', (req, res) => {
+    const row = db.prepare('SELECT totalVisits FROM settings WHERE id = 1').get() as { totalVisits: number };
+    res.json({ totalVisits: row?.totalVisits ?? 100 });
+});
+
+app.post('/api/visits/increment', (req, res) => {
+    const current = db.prepare('SELECT totalVisits FROM settings WHERE id = 1').get() as { totalVisits: number };
+    const next = (current?.totalVisits ?? 100) + 1;
+    db.prepare('UPDATE settings SET totalVisits = ? WHERE id = 1').run(next);
+    res.json({ totalVisits: next });
 });
 
 // 2. Social Links
@@ -334,7 +360,7 @@ app.post('/api/experience-items', (req, res) => {
 // --- AI ENDPOINT ---
 app.post('/api/ai/chat', async (req, res) => {
     const { question, language, context } = req.body;
-    const apiKey = process.env.VITE_GEMINI_API_KEY || process.env.API_KEY;
+    const apiKey = process.env.VITE_GEMINI_API_KEY || process.env.API_KEY || process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
         return res.json({ text: language === 'ar' ? 'مفتاح API غير متوفر.' : 'API Key missing.', confidence: false });
@@ -345,7 +371,7 @@ app.post('/api/ai/chat', async (req, res) => {
     const kbString = kb.map(k => `Q: ${k.question}\nA: ${k.answer}`).join('\n\n');
 
     const systemPrompt = `
-    You are the AI Assistant for Sarah, a professional Cybersecurity Engineer.
+    You are the AI Assistant for Malk (Eng. Malk Khalid All Banna), a professional Cybersecurity Engineer.
     Your tone should be professional, elegant, and concise.
     Current Language: ${language === 'ar' ? 'Arabic' : 'English'}.
     
@@ -359,7 +385,7 @@ app.post('/api/ai/chat', async (req, res) => {
     1. Use the SOURCE MATERIAL and KNOWLEDGE BASE to answer the user's question.
     2. If the answer is found in the source material, answer clearly in the requested language.
     3. If the answer is NOT in the source material, you MUST reply exactly with the specific fallback phrase: "I_DO_NOT_KNOW_THIS_INFO".
-    4. Do not make up facts about Sarah.
+    4. Do not make up facts about Malk.
     5. If the user greets you, greet back politely.
   `;
 
@@ -395,6 +421,16 @@ app.post('/api/ai/chat', async (req, res) => {
         res.json({ text: language === 'ar' ? 'حدث خطأ في الاتصال.' : 'Connection error occurred.', confidence: false });
     }
 });
+
+// SPA fallback: serve index.html for any non-API route (React Router handles the rest)
+if (fs.existsSync(distPath)) {
+    app.use((req, res, next) => {
+        if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) {
+            return next();
+        }
+        res.sendFile(path.join(distPath, 'index.html'));
+    });
+}
 
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);

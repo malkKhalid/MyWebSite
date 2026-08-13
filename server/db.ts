@@ -13,6 +13,8 @@ export const initDb = () => {
             id INTEGER PRIMARY KEY CHECK (id = 1),
             siteNameEn TEXT,
             siteNameAr TEXT,
+            fullNameEn TEXT,
+            fullNameAr TEXT,
             profileImage TEXT,
             primaryColorRGB TEXT,
             contactPhone TEXT,
@@ -25,7 +27,8 @@ export const initDb = () => {
             aboutTextEn TEXT,
             aboutTextAr TEXT,
             copyrightOwnerName TEXT,
-            contactEmail TEXT
+            contactEmail TEXT,
+            totalVisits INTEGER DEFAULT 100
         )
     `);
 
@@ -57,14 +60,23 @@ export const initDb = () => {
     try {
         db.exec("ALTER TABLE settings ADD COLUMN contactEmail TEXT");
     } catch (e) { }
+    try {
+        db.exec("ALTER TABLE settings ADD COLUMN fullNameEn TEXT");
+    } catch (e) { }
+    try {
+        db.exec("ALTER TABLE settings ADD COLUMN fullNameAr TEXT");
+    } catch (e) { }
+    try {
+        db.exec("ALTER TABLE settings ADD COLUMN totalVisits INTEGER DEFAULT 100");
+    } catch (e) { }
 
     // Ensure default settings exist
     const stmt = db.prepare('SELECT count(*) as count FROM settings');
     const row = stmt.get() as { count: number };
     if (row.count === 0) {
         db.prepare(`
-            INSERT INTO settings (id, siteNameEn, siteNameAr, profileImage, primaryColorRGB, contactPhone, aiContext, logoImage, heroSubtitleEn, heroSubtitleAr, siteSubtitleEn, siteSubtitleAr, aboutTextEn, aboutTextAr, copyrightOwnerName, contactEmail)
-            VALUES (1, 'Sarah Al-Cyber', 'سارة سايبر', '', '219 39 119', '', '', '', 'Security with Elegance', 'الأمان بلمسة من الأناقة', '', '', 'I am Sarah...', 'أنا سارة...', 'Malek Albanna', 'sarah@example.com')
+            INSERT INTO settings (id, siteNameEn, siteNameAr, fullNameEn, fullNameAr, profileImage, primaryColorRGB, contactPhone, aiContext, logoImage, heroSubtitleEn, heroSubtitleAr, siteSubtitleEn, siteSubtitleAr, aboutTextEn, aboutTextAr, copyrightOwnerName, contactEmail, totalVisits)
+            VALUES (1, 'Malk All Banna', 'ملك البنا', 'Eng. Malk Khalid All Banna', 'م. ملك خالد البنا', '', '219 39 119', '', '', '', 'Security with Elegance', 'الأمان بلمسة من الأناقة', '', '', 'I am Malk...', 'أنا ملك البنا...', 'Malk All Banna', 'malk@example.com', 100)
         `).run();
     }
 
