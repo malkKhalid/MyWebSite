@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "dev:server": "cd server && npm run dev",
-    "build": "vite build",
+    "build": "npm install --prefix server --no-audit --no-fund --include=dev && vite build",
     "start": "cd server && npm run start",
     "install:all": "npm install && cd server && npm install"
   },
@@ -27,6 +27,6 @@
     "vite": "^6.2.0"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": "22.x"
   }
 }
