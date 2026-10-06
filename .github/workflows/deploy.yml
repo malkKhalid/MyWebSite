@@ -4,10 +4,21 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-namecheap
+  cancel-in-progress: false
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
+    env:
+      SSH_HOST: ${{ secrets.SSH_HOST }}
+      SSH_PORT: ${{ secrets.SSH_PORT }}
+      SSH_USER: ${{ secrets.SSH_USER }}
+      APP_PATH: ${{ secrets.APP_PATH }}
 
     steps:
       - name: Checkout code
@@ -17,47 +28,151 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22.x'
+          cache: npm
 
       - name: Install dependencies
-        run: npm install
+        run: npm install --no-audit --no-fund
 
       - name: Build frontend
         run: npm run build
 
-      - name: Setup SSH
+      - name: Check required secrets
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
-
-      - name: Deploy to server
-        run: |
-          ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
-            cd ${{ secrets.APP_PATH }} && \
-            rm -rf dist server && \
-            echo 'Waiting for files...'
-          "
-
-          # Copy dist folder
-          scp -P ${{ secrets.SSH_PORT }} -r dist ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.APP_PATH }}/
-
-          # Copy server folder
-          scp -P ${{ secrets.SSH_PORT }} -r server ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.APP_PATH }}/
-
-          # Copy .env.local if it exists
-          if [ -f .env.local ]; then
-            scp -P ${{ secrets.SSH_PORT }} .env.local ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.APP_PATH }}/
+          set -euo pipefail
+          missing=0
+          for v in SSH_HOST SSH_PORT SSH_USER APP_PATH; do
+            if [ -z "${!v}" ]; then echo "::error::Secret $v is not set"; missing=1; fi
+          done
+          if [ -z "${{ secrets.SSH_PRIVATE_KEY }}" ]; then
+            echo "::error::Secret SSH_PRIVATE_KEY is not set"; missing=1
+          fi
+          if [ "$missing" -ne 0 ]; then
+            echo "Add the missing secrets in GitHub: Settings -> Secrets and variables -> Actions"
+            exit 1
           fi
 
-          # Install dependencies and restart
-          ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
-            cd ${{ secrets.APP_PATH }} && \
-            cd server && \
-            npm install && \
-            echo 'Deployment completed!'
-          "
+      - name: Prepare release bundle
+        run: |
+          set -euo pipefail
+          mkdir -p release
+          cp -r dist release/dist
+
+          mkdir -p release/server
+          tar -C server \
+            --exclude=node_modules \
+            --exclude=dist \
+            --exclude=uploads \
+            --exclude=database.sqlite \
+            --exclude='*.log' \
+            -cf - . | tar -C release/server -xf -
+
+          cp deploy/app.js deploy/package.json release/
+
+          # Shipped only for the very first deploy; never overwrites live data.
+          if [ -f server/database.sqlite ]; then
+            cp server/database.sqlite release/server/database.sqlite.uploaded
+          fi
+
+          echo "Bundle:"
+          find release -maxdepth 2 | sort
+
+      - name: Setup SSH
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          umask 077
+          printf '%s\n' "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          ssh-keyscan -p "$SSH_PORT" "$SSH_HOST" > ~/.ssh/known_hosts 2>/dev/null || true
+
+          cat > ~/.ssh/config <<EOF
+          Host deploy
+            HostName $SSH_HOST
+            Port $SSH_PORT
+            User $SSH_USER
+            IdentityFile ~/.ssh/id_deploy
+            IdentitiesOnly yes
+            StrictHostKeyChecking accept-new
+            HostKeyAlgorithms +ssh-rsa
+            PubkeyAcceptedAlgorithms +ssh-rsa
+            ServerAliveInterval 30
+            ConnectTimeout 45
+          EOF
+          chmod 600 ~/.ssh/config
+
+      - name: Test SSH connection
+        run: ssh deploy 'echo connected as $(whoami) on $(hostname)'
+
+      - name: Deploy files
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          set -euo pipefail
+
+          ssh deploy "mkdir -p '$APP_PATH'"
+          scp -r release/. deploy:"$APP_PATH"/
+
+          if [ -n "$GEMINI_API_KEY" ]; then
+            printf 'GEMINI_API_KEY=%s\n' "$GEMINI_API_KEY" \
+              | ssh deploy "cat > '$APP_PATH/.env.local'"
+          else
+            echo "::warning::GEMINI_API_KEY secret not set, keeping server-side env only"
+          fi
+
+          ssh deploy "APP_PATH='$APP_PATH' bash -s" <<'REMOTE'
+          set -euo pipefail
+          cd "$APP_PATH"
+
+          # Keep the live database: only use the shipped snapshot on first deploy
+          if [ -f server/database.sqlite.uploaded ]; then
+            if [ -f server/database.sqlite ]; then
+              rm -f server/database.sqlite.uploaded
+            else
+              mv server/database.sqlite.uploaded server/database.sqlite
+            fi
+          fi
+
+          # Activate the cPanel Node.js selector environment when present
+          for activate in "$HOME"/nodevenv/*/*/bin/activate; do
+            if [ -f "$activate" ]; then
+              . "$activate"
+              break
+            fi
+          done
+
+          echo "node: $(command -v node || echo MISSING) $(node -v 2>/dev/null || true)"
+          echo "npm:  $(command -v npm || echo MISSING)"
+
+          if command -v npm >/dev/null 2>&1; then
+            (cd server && npm install --omit=dev --no-audit --no-fund)
+          else
+            echo "::warning::npm not available, skipping dependency install"
+          fi
+
+          mkdir -p tmp
+          date > tmp/restart.txt
+          echo "deployed to $APP_PATH"
+          REMOTE
+
+      - name: Verify the website
+        run: |
+          set -euo pipefail
+          code=000
+          for i in 1 2 3 4 5; do
+            code=$(curl -s -o /tmp/site.html -w '%{http_code}' -L --max-time 30 https://malkallbanna.com/ || echo 000)
+            echo "attempt $i: HTTP $code"
+            if [ "$code" = "200" ]; then
+              break
+            fi
+            sleep 10
+          done
+          if [ "$code" != "200" ]; then
+            echo "::error::https://malkallbanna.com/ returned HTTP $code"
+            head -c 500 /tmp/site.html || true
+            exit 1
+          fi
+          echo "Site is up"
 
       - name: Notify deployment status
         if: always()
-        run: echo "Deployment to ${{ secrets.APP_PATH }} completed!"
+        run: echo "Deployment finished for $APP_PATH"

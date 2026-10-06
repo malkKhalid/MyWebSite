@@ -443,6 +443,14 @@ if (fs.existsSync(distPath)) {
     });
 }
 
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-});
+// cPanel/Passenger loads this file and expects the app to be exported without
+// binding a port. Running it directly (npm start / npm run dev) keeps the old
+// behaviour of listening on PORT.
+if (require.main === module) {
+    app.listen(PORT, () => {
+        console.log(`Server running on http://localhost:${PORT}`);
+    });
+}
+
+export { app };
+export default app;
