@@ -57,6 +57,18 @@ jobs:
           mkdir -p release
           cp -r dist release/dist
 
+          # The domain's document root is this folder, so LiteSpeed needs the
+          # cPanel Passenger block here to route dynamic requests to the app.
+          cat > release/dist/.htaccess <<EOF
+          # DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION BEGIN
+          PassengerAppRoot "$APP_PATH"
+          PassengerBaseURI "/"
+          PassengerNodejs "$(dirname "$APP_PATH")/nodevenv/$(basename "$APP_PATH")/20/bin/node"
+          PassengerAppType node
+          PassengerStartupFile app.js
+          # DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION END
+          EOF
+
           mkdir -p release/server
           tar -C server \
             --exclude=node_modules \
