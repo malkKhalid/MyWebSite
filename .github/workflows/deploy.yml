@@ -173,7 +173,7 @@ jobs:
               echo "injected prebuilt better-sqlite3"
             fi
 
-            (cd server && node -e "require('better-sqlite3'); console.log('better-sqlite3 loads OK')")
+            (cd server && node -e "const D=require('better-sqlite3'); const db=new D(':memory:'); console.log('better-sqlite3 real test OK:', db.prepare('select 1 v').get().v)")
           else
             echo "::warning::npm not available, skipping dependency install"
           fi
