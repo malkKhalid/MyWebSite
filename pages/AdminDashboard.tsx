@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { useNavigate } from 'react-router-dom';
 import { LogOut, Brain, ThumbsUp, Plus, Trash2, HelpCircle, Layout, Share2, Languages, Briefcase, Award, Save, Palette, FileText, Upload, Image as ImageIcon, BookOpen, Bell, Check, X, GraduationCap, Edit } from 'lucide-react';
@@ -30,6 +30,11 @@ const AdminDashboard: React.FC = () => {
 
     // Local state for forms
     const [tempSettings, setTempSettings] = useState<AppSettings>(settings);
+
+    // Keep the form in sync with the latest saved settings (fixes fields being reset when data loads asynchronously)
+    useEffect(() => {
+        setTempSettings(settings);
+    }, [settings]);
     const [newSocial, setNewSocial] = useState({ platform: 'website', url: '', customIcon: '' });
     const [newSkill, setNewSkill] = useState<Partial<Skill>>({ iconName: 'Shield' });
     const [newLang, setNewLang] = useState<Partial<LanguageItem>>({ percentage: 50 });
@@ -601,6 +606,17 @@ const AdminDashboard: React.FC = () => {
                                         <div>
                                             <label className="block text-sm text-gray-500 mb-1">Site Subtitle (AR)</label>
                                             <input value={tempSettings.siteSubtitleAr || ''} onChange={e => setTempSettings({ ...tempSettings, siteSubtitleAr: e.target.value })} className="w-full border p-2 rounded text-right bg-white text-gray-900" placeholder="مثال: الأمن السيبراني" />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm text-gray-500 mb-1">Hero Title (EN) - under your name</label>
+                                            <input value={tempSettings.heroTitleEn || ''} onChange={e => setTempSettings({ ...tempSettings, heroTitleEn: e.target.value })} className="w-full border p-2 rounded bg-white text-gray-900" placeholder="e.g. Security with Elegance" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm text-gray-500 mb-1">Hero Title (AR) - تحت الاسم</label>
+                                            <input value={tempSettings.heroTitleAr || ''} onChange={e => setTempSettings({ ...tempSettings, heroTitleAr: e.target.value })} className="w-full border p-2 rounded text-right bg-white text-gray-900" placeholder="مثال: الأمان بلمسة من الأناقة" />
                                         </div>
                                     </div>
 

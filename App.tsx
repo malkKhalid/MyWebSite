@@ -25,7 +25,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
 const AppContent = () => {
   // Visit Counter Logic (mock)
-  const { incrementVisits } = useApp();
+  const { incrementVisits, settings } = useApp();
   useEffect(() => {
     // Increment once per session reload (guard against StrictMode double-mount)
     if (!(window as any).__visitCounted) {
@@ -34,6 +34,37 @@ const AppContent = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Use the uploaded site logo as the browser tab icon (favicon)
+  useEffect(() => {
+    const setFavicon = (href: string) => {
+      let link = document.querySelector<HTMLLinkElement>("link[rel='icon']");
+      if (!link) {
+        link = document.createElement('link');
+        link.rel = 'icon';
+        document.head.appendChild(link);
+      }
+      link.type = 'image/x-icon';
+      link.href = href;
+    };
+
+    const logo = settings.logoImage;
+    if (!logo) {
+      setFavicon('/favicon.svg');
+      return;
+    }
+
+    if (logo.startsWith('data:')) {
+      // Browsers reject large data URLs as favicons, so convert to a blob URL
+      fetch(logo)
+        .then(r => r.blob())
+        .then(blob => URL.createObjectURL(blob))
+        .then(url => setFavicon(url))
+        .catch(() => setFavicon(logo));
+    } else {
+      setFavicon(logo);
+    }
+  }, [settings.logoImage]);
 
   return (
     <Router>

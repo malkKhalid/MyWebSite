@@ -199,7 +199,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   // Admin Actions
   const updateSettings = (s: AppSettings) => {
-    setSettings(s);
+    setSettings(prev => ({ ...prev, ...s }));
     postData('settings', s);
   };
 

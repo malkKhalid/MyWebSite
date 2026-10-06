@@ -20,6 +20,8 @@ export const initDb = () => {
             contactPhone TEXT,
             aiContext TEXT,
             logoImage TEXT,
+            heroTitleEn TEXT,
+            heroTitleAr TEXT,
             heroSubtitleEn TEXT,
             heroSubtitleAr TEXT,
             siteSubtitleEn TEXT,
@@ -35,6 +37,12 @@ export const initDb = () => {
     // Migration for existing tables
     try {
         db.exec("ALTER TABLE settings ADD COLUMN logoImage TEXT");
+    } catch (e) { }
+    try {
+        db.exec("ALTER TABLE settings ADD COLUMN heroTitleEn TEXT");
+    } catch (e) { }
+    try {
+        db.exec("ALTER TABLE settings ADD COLUMN heroTitleAr TEXT");
     } catch (e) { }
     try {
         db.exec("ALTER TABLE settings ADD COLUMN heroSubtitleEn TEXT");
@@ -75,9 +83,17 @@ export const initDb = () => {
     const row = stmt.get() as { count: number };
     if (row.count === 0) {
         db.prepare(`
-            INSERT INTO settings (id, siteNameEn, siteNameAr, fullNameEn, fullNameAr, profileImage, primaryColorRGB, contactPhone, aiContext, logoImage, heroSubtitleEn, heroSubtitleAr, siteSubtitleEn, siteSubtitleAr, aboutTextEn, aboutTextAr, copyrightOwnerName, contactEmail, totalVisits)
-            VALUES (1, 'Malk All Banna', 'ملك البنا', 'Eng. Malk Khalid All Banna', 'م. ملك خالد البنا', '', '219 39 119', '', '', '', 'Security with Elegance', 'الأمان بلمسة من الأناقة', '', '', 'I am Malk...', 'أنا ملك البنا...', 'Malk All Banna', 'malk@example.com', 100)
+            INSERT INTO settings (id, siteNameEn, siteNameAr, fullNameEn, fullNameAr, profileImage, primaryColorRGB, contactPhone, aiContext, logoImage, heroTitleEn, heroTitleAr, heroSubtitleEn, heroSubtitleAr, siteSubtitleEn, siteSubtitleAr, aboutTextEn, aboutTextAr, copyrightOwnerName, contactEmail, totalVisits)
+            VALUES (1, 'Malk All Banna', 'ملك البنا', 'Eng. Malk Khalid All Banna', 'م. ملك خالد البنا', '', '219 39 119', '', '', '', 'Security with Elegance', 'الأمان بلمسة من الأناقة', 'Information Security Engineer blending technical precision with intelligent solutions.', 'مهندس أمن معلومات يدمج بين الدقة التقنية والحلول الذكية.', '', '', 'I am Malk...', 'أنا ملك البنا...', 'Malk All Banna', 'malk@example.com', 100)
         `).run();
+    } else {
+        // Backfill heroTitle with the default hero title for older databases (keeps the currently displayed title)
+        try {
+            db.exec("UPDATE settings SET heroTitleEn = 'Security with Elegance' WHERE heroTitleEn IS NULL OR heroTitleEn = ''");
+        } catch (e) { }
+        try {
+            db.exec("UPDATE settings SET heroTitleAr = 'الأمان بلمسة من الأناقة' WHERE heroTitleAr IS NULL OR heroTitleAr = ''");
+        } catch (e) { }
     }
 
     // Social Links

@@ -50,18 +50,29 @@ app.get('/api/settings', (req, res) => {
 
 app.post('/api/settings', (req, res) => {
     const s = req.body;
-    const current = db.prepare('SELECT totalVisits FROM settings WHERE id = 1').get() as { totalVisits: number } | undefined;
+    const current = db.prepare('SELECT * FROM settings WHERE id = 1').get() as Record<string, any> | undefined;
+
+    // Only apply fields that are actually present, keep existing values for everything else
+    const clean = (obj: any) => Object.fromEntries(
+        Object.entries(obj || {}).filter(([, v]) => v !== undefined && v !== null)
+    );
+    const merged = { ...(current || {}), ...clean(s) };
+
     const totalVisits = typeof s.totalVisits === 'number' ? s.totalVisits : (current?.totalVisits ?? 100);
+
     db.prepare(`
         UPDATE settings SET 
         siteNameEn = ?, siteNameAr = ?, fullNameEn = ?, fullNameAr = ?, profileImage = ?, primaryColorRGB = ?, contactPhone = ?, aiContext = ?,
-        logoImage = ?, heroSubtitleEn = ?, heroSubtitleAr = ?, siteSubtitleEn = ?, siteSubtitleAr = ?, 
+        logoImage = ?, heroTitleEn = ?, heroTitleAr = ?, heroSubtitleEn = ?, heroSubtitleAr = ?, siteSubtitleEn = ?, siteSubtitleAr = ?, 
         aboutTextEn = ?, aboutTextAr = ?, copyrightOwnerName = ?, contactEmail = ?, totalVisits = ?
         WHERE id = 1
     `).run(
-        s.siteNameEn, s.siteNameAr, s.fullNameEn, s.fullNameAr, s.profileImage, s.primaryColorRGB, s.contactPhone, s.aiContext,
-        s.logoImage, s.heroSubtitleEn, s.heroSubtitleAr, s.siteSubtitleEn, s.siteSubtitleAr,
-        s.aboutTextEn, s.aboutTextAr, s.copyrightOwnerName, s.contactEmail, totalVisits
+        merged.siteNameEn ?? null, merged.siteNameAr ?? null, merged.fullNameEn ?? null, merged.fullNameAr ?? null,
+        merged.profileImage ?? null, merged.primaryColorRGB ?? null, merged.contactPhone ?? null, merged.aiContext ?? null,
+        merged.logoImage ?? null, merged.heroTitleEn ?? null, merged.heroTitleAr ?? null, merged.heroSubtitleEn ?? null,
+        merged.heroSubtitleAr ?? null, merged.siteSubtitleEn ?? null, merged.siteSubtitleAr ?? null,
+        merged.aboutTextEn ?? null, merged.aboutTextAr ?? null, merged.copyrightOwnerName ?? null, merged.contactEmail ?? null,
+        totalVisits
     );
     res.json({ success: true });
 });

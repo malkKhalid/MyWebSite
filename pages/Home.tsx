@@ -611,7 +611,7 @@ const Home: React.FC = () => {
             viewport={{ once: true }}
             className="md:w-1/4 md:sticky md:top-32"
           >
-            <div className={`flex flex-col gap-2 mb-4 ${language === 'ar' ? 'items-end' : 'items-start'}`}>
+            <div className="flex flex-col gap-2 mb-4 items-start">
               <GraduationCap className="w-10 h-10 text-maroon" />
               <h2 className="text-3xl font-bold text-maroon">{language === 'ar' ? 'التعليم' : 'Education'}</h2>
               <h2 className="text-3xl font-bold text-maroon">{language === 'ar' ? 'الأكاديمي' : ''}</h2>
