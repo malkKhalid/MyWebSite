@@ -18,7 +18,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Build better-sqlite3 on glibc 2.17 (manylinux2014)
+      - name: Build better-sqlite3 on glibc 2.28 (same as the server)
         run: |
           set -euo pipefail
           docker run --rm \
@@ -26,20 +26,31 @@ jobs:
             -w /repo \
             -e HOST_UID="$(id -u)" \
             -e HOST_GID="$(id -g)" \
-            quay.io/pypa/manylinux2014_x86_64 bash -lc '
+            quay.io/pypa/manylinux_2_28_x86_64 bash -lc '
               set -euo pipefail
-              curl -fsSL https://nodejs.org/dist/v20.18.0/node-v20.18.0-linux-x64.tar.xz -o /tmp/node.tar.xz
-              tar -xJf /tmp/node.tar.xz -C /usr/local --strip-components=1
-              echo "node: $(node -v)  npm: $(npm -v)"
+
+              # Toolset compilers (gcc) if the image does not enable them
+              for enable in /opt/rh/gcc-toolset-*/enable; do
+                [ -f "$enable" ] && . "$enable" && break
+              done
+              echo "glibc: $(ldd --version | head -1)"
               gcc --version | head -1
+
+              curl -fsSL https://nodejs.org/dist/v20.18.0/node-v20.18.0-linux-x64.tar.gz -o /tmp/node.tar.gz
+              tar -xzf /tmp/node.tar.gz -C /usr/local --strip-components=1
+              echo "node: $(node -v)  npm: $(npm -v)"
 
               export npm_config_python=/opt/python/cp39-cp39/bin/python3
               export npm_config_build_from_source=true
+              # The host system libstdc++ is GCC 8: link statically so the
+              # addon never depends on a newer GLIBCXX than the server has.
+              export CXXFLAGS="-static-libstdc++ -static-libgcc"
+              export LDFLAGS="-static-libstdc++ -static-libgcc"
 
               cd /repo/server
               npm ci --omit=dev --no-audit --no-fund
 
-              node -e "const D=require(\"better-sqlite3\"); const db=new D(\":memory:\"); console.log(\"native module OK:\", db.prepare(\"select sqlite_version() v\").get().v);"
+              node -e "const D=require(\"better-sqlite3\"); const db=new D(\":memory:\"); console.log(\"native module OK, sqlite\", db.prepare(\"select sqlite_version() v\").get().v);"
 
               mkdir -p /repo/deploy/native
               cp node_modules/better-sqlite3/build/Release/better_sqlite3.node /repo/deploy/native/better_sqlite3.node
@@ -57,6 +68,6 @@ jobs:
           if git diff --cached --quiet; then
             echo "Prebuilt better-sqlite3 is already up to date"
           else
-            git commit -m "chore: prebuilt better-sqlite3 for server glibc (2.17 baseline)"
+            git commit -m "chore: prebuilt better-sqlite3 for the server (glibc 2.28)"
             git push
           fi
