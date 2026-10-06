@@ -68,6 +68,16 @@ jobs:
 
           cp deploy/app.js deploy/package.json release/
 
+          # Prebuilt native addon (the server cannot compile: gcc is locked to
+          # the "compiler" group and its glibc is 2.28 < prebuilt 2.29).
+          if [ -f deploy/native/better_sqlite3.node ]; then
+            mkdir -p release/native
+            cp deploy/native/better_sqlite3.node release/native/
+            echo "shipping prebuilt better-sqlite3"
+          else
+            echo "::warning::deploy/native/better_sqlite3.node missing - run the 'Build native module' workflow"
+          fi
+
           # Shipped only for the very first deploy; never overwrites live data.
           if [ -f server/database.sqlite ]; then
             cp server/database.sqlite release/server/database.sqlite.uploaded
@@ -151,7 +161,19 @@ jobs:
           echo "npm:  $(command -v npm || echo MISSING)"
 
           if command -v npm >/dev/null 2>&1; then
-            (cd server && npm install --omit=dev --no-audit --no-fund)
+            if [ -f server/package-lock.json ]; then
+              (cd server && npm ci --omit=dev --no-audit --no-fund)
+            else
+              (cd server && npm install --omit=dev --no-audit --no-fund)
+            fi
+
+            if [ -f native/better_sqlite3.node ]; then
+              mkdir -p server/node_modules/better-sqlite3/build/Release
+              cp native/better_sqlite3.node server/node_modules/better-sqlite3/build/Release/better_sqlite3.node
+              echo "injected prebuilt better-sqlite3"
+            fi
+
+            (cd server && node -e "require('better-sqlite3'); console.log('better-sqlite3 loads OK')")
           else
             echo "::warning::npm not available, skipping dependency install"
           fi

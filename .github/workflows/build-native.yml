@@ -1,0 +1,62 @@
+name: Build native module
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-native
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build better-sqlite3 on glibc 2.17 (manylinux2014)
+        run: |
+          set -euo pipefail
+          docker run --rm \
+            -v "$PWD":/repo \
+            -w /repo \
+            -e HOST_UID="$(id -u)" \
+            -e HOST_GID="$(id -g)" \
+            quay.io/pypa/manylinux2014_x86_64 bash -lc '
+              set -euo pipefail
+              curl -fsSL https://nodejs.org/dist/v20.18.0/node-v20.18.0-linux-x64.tar.xz -o /tmp/node.tar.xz
+              tar -xJf /tmp/node.tar.xz -C /usr/local --strip-components=1
+              echo "node: $(node -v)  npm: $(npm -v)"
+              gcc --version | head -1
+
+              export npm_config_python=/opt/python/cp39-cp39/bin/python3
+              export npm_config_build_from_source=true
+
+              cd /repo/server
+              npm ci --omit=dev --no-audit --no-fund
+
+              node -e "const D=require(\"better-sqlite3\"); const db=new D(\":memory:\"); console.log(\"native module OK:\", db.prepare(\"select sqlite_version() v\").get().v);"
+
+              mkdir -p /repo/deploy/native
+              cp node_modules/better-sqlite3/build/Release/better_sqlite3.node /repo/deploy/native/better_sqlite3.node
+              chown "$HOST_UID:$HOST_GID" /repo/deploy/native/better_sqlite3.node
+              rm -rf /repo/server/node_modules
+              echo "artifact: $(ls -la /repo/deploy/native/better_sqlite3.node)"
+            '
+
+      - name: Commit the built binary
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add deploy/native/better_sqlite3.node
+          if git diff --cached --quiet; then
+            echo "Prebuilt better-sqlite3 is already up to date"
+          else
+            git commit -m "chore: prebuilt better-sqlite3 for server glibc (2.17 baseline)"
+            git push
+          fi
