@@ -69,6 +69,34 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
+// Persistent snapshot: shows real content on first paint instead of defaults.
+const CACHE_KEY = 'malk-site-cache-v2';
+type CacheShape = {
+  settings?: AppSettings;
+  totalVisits?: number;
+  socialLinks?: SocialLink[];
+  languagesList?: LanguageItem[];
+  skills?: Skill[];
+  projects?: Project[];
+  certifications?: Certification[];
+  educationList?: EducationItem[];
+  experienceCategories?: ExperienceCategory[];
+  experienceItems?: ExperienceItem[];
+  blogs?: BlogPost[];
+  testimonials?: Testimonial[];
+  knowledgeBase?: KnowledgeItem[];
+};
+let cachedSnapshot: CacheShape = {};
+try {
+  localStorage.removeItem('malk-site-cache'); // old multi-MB cache from when blobs were inline
+  const raw = localStorage.getItem(CACHE_KEY);
+  if (raw) cachedSnapshot = JSON.parse(raw);
+} catch { /* ignore corrupt cache */ }
+const saveSnapshot = (data: CacheShape) => {
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch { /* quota */ }
+};
+
+
 // Default Fallback Data
 const DEFAULT_SETTINGS: AppSettings = {
   siteNameEn: 'Malk All Banna',
@@ -94,33 +122,27 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   // Dynamic Data States
-  const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
-  const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
-  const [languagesList, setLanguagesList] = useState<LanguageItem[]>([]);
-  const [skills, setSkills] = useState<Skill[]>([]);
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [certifications, setCertifications] = useState<Certification[]>([]);
-  const [educationList, setEducationList] = useState<EducationItem[]>([]);
-  const [experienceCategories, setExperienceCategories] = useState<ExperienceCategory[]>([
-    { id: '1', titleEn: 'Cybersecurity', titleAr: 'الأمن السيبراني' },
-    { id: '2', titleEn: 'Web Development', titleAr: 'تطوير الويب' }
-  ]);
-  const [experienceItems, setExperienceItems] = useState<ExperienceItem[]>([
-    {
-      id: '1', categoryId: '1', company: 'TechSecure', titleEn: 'Security Analyst', titleAr: 'محلل أمني',
-      duration: '2022 - Present', country: 'Saudi Arabia',
-      descEn: 'Monitoring and analyzing security incidents.', descAr: 'مراقبة وتحليل الحوادث الأمنية.'
-    }
-  ]);
+  const [settings, setSettings] = useState<AppSettings>({ ...DEFAULT_SETTINGS, ...(cachedSnapshot.settings || {}) });
+  const [socialLinks, setSocialLinks] = useState<SocialLink[]>(cachedSnapshot.socialLinks || []);
+  const [languagesList, setLanguagesList] = useState<LanguageItem[]>(cachedSnapshot.languagesList || []);
+  const [skills, setSkills] = useState<Skill[]>(cachedSnapshot.skills || []);
+  const [projects, setProjects] = useState<Project[]>(cachedSnapshot.projects || []);
+  const [certifications, setCertifications] = useState<Certification[]>(cachedSnapshot.certifications || []);
+  const [educationList, setEducationList] = useState<EducationItem[]>(cachedSnapshot.educationList || []);
+  const [experienceCategories, setExperienceCategories] = useState<ExperienceCategory[]>(cachedSnapshot.experienceCategories || []);
+  const [experienceItems, setExperienceItems] = useState<ExperienceItem[]>(cachedSnapshot.experienceItems || []);
 
-  const [blogs, setBlogs] = useState<BlogPost[]>([]);
-  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
-  const [knowledgeBase, setKnowledgeBase] = useState<KnowledgeItem[]>([]);
+  const [blogs, setBlogs] = useState<BlogPost[]>(cachedSnapshot.blogs || []);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>(cachedSnapshot.testimonials || []);
+  const [knowledgeBase, setKnowledgeBase] = useState<KnowledgeItem[]>(cachedSnapshot.knowledgeBase || []);
   const [pendingQuestions, setPendingQuestions] = useState<PendingQuestion[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [totalVisits, setTotalVisits] = useState(100);
+  const [totalVisits, setTotalVisits] = useState(cachedSnapshot.totalVisits ?? 0);
   // --- Fetch Data on Mount ---
   useEffect(() => {
+    const safeJson = async (res: Response, fallback: any) => {
+      try { return await res.json(); } catch { return fallback; }
+    };
     const fetchData = async () => {
       try {
         const [
@@ -143,24 +165,53 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           fetch(`${API_URL}/experience-items`)
         ]);
 
-        const s = await settingsRes.json();
+        const s = await safeJson(settingsRes, null);
         if (s) {
           setSettings(prev => ({ ...prev, ...s }));
           if (typeof s.totalVisits === 'number') setTotalVisits(s.totalVisits);
         }
 
-        setSocialLinks(await socialsRes.json());
-        setSkills(await skillsRes.json());
-        setCertifications(await certsRes.json());
-        setProjects(await projectsRes.json());
-        setBlogs(await blogsRes.json());
-        setEducationList(await eduRes.json());
-        setLanguagesList(await langsRes.json());
-        setNotifications(await notifRes.json());
-        setTestimonials(await testRes.json());
-        setKnowledgeBase(await kbRes.json());
-        setExperienceCategories(await expCatRes.json());
-        setExperienceItems(await expItemRes.json());
+        const nextSocials = await safeJson(socialsRes, []);
+        const nextSkills = await safeJson(skillsRes, []);
+        const nextCerts = await safeJson(certsRes, []);
+        const nextProjects = await safeJson(projectsRes, []);
+        const nextBlogs = await safeJson(blogsRes, []);
+        const nextEdu = await safeJson(eduRes, []);
+        const nextLangs = await safeJson(langsRes, []);
+        const nextNotifs = await safeJson(notifRes, []);
+        const nextTestimonials = await safeJson(testRes, []);
+        const nextKb = await safeJson(kbRes, []);
+        const nextExpCats = await safeJson(expCatRes, []);
+        const nextExpItems = await safeJson(expItemRes, []);
+
+        setSocialLinks(nextSocials);
+        setSkills(nextSkills);
+        setCertifications(nextCerts);
+        setProjects(nextProjects);
+        setBlogs(nextBlogs);
+        setEducationList(nextEdu);
+        setLanguagesList(nextLangs);
+        setNotifications(nextNotifs);
+        setTestimonials(nextTestimonials);
+        setKnowledgeBase(nextKb);
+        setExperienceCategories(nextExpCats);
+        setExperienceItems(nextExpItems);
+
+        saveSnapshot({
+          settings: s || undefined,
+          totalVisits: typeof s?.totalVisits === 'number' ? s.totalVisits : undefined,
+          socialLinks: nextSocials,
+          skills: nextSkills,
+          certifications: nextCerts,
+          projects: nextProjects,
+          blogs: nextBlogs,
+          educationList: nextEdu,
+          languagesList: nextLangs,
+          testimonials: nextTestimonials,
+          knowledgeBase: nextKb,
+          experienceCategories: nextExpCats,
+          experienceItems: nextExpItems,
+        });
 
       } catch (error) {
         console.error("Failed to fetch data:", error);

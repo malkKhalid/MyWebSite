@@ -1,0 +1,212 @@
+[
+  {
+    "file": "face722e234726e6b8a97e67.jpg",
+    "table": "settings",
+    "col": "profileImage",
+    "id": 1,
+    "kind": "jpg",
+    "maxDim": 1200,
+    "quality": 84,
+    "rawBytes": 2204544
+  },
+  {
+    "file": "94f8fe08edc36b98ef6a3f91.png",
+    "table": "settings",
+    "col": "logoImage",
+    "id": 1,
+    "kind": "png",
+    "maxDim": 512,
+    "quality": 84,
+    "rawBytes": 690435
+  },
+  {
+    "file": "edfe88034537ec5a71697d59.png",
+    "table": "social_links",
+    "col": "customIcon",
+    "id": "1765120203729",
+    "kind": "png",
+    "maxDim": 256,
+    "quality": 84,
+    "rawBytes": 36725
+  },
+  {
+    "file": "f620f1b2cba36a642ff9076a.png",
+    "table": "social_links",
+    "col": "customIcon",
+    "id": "1766159338756",
+    "kind": "png",
+    "maxDim": 256,
+    "quality": 84,
+    "rawBytes": 1907
+  },
+  {
+    "file": "195146be5c07403f7ab2f88d.png",
+    "table": "social_links",
+    "col": "customIcon",
+    "id": "1786599895470",
+    "kind": "png",
+    "maxDim": 256,
+    "quality": 84,
+    "rawBytes": 1112
+  },
+  {
+    "file": "345d4470459767901396a057.png",
+    "table": "social_links",
+    "col": "customIcon",
+    "id": "1786600030982",
+    "kind": "png",
+    "maxDim": 256,
+    "quality": 84,
+    "rawBytes": 1197
+  },
+  {
+    "file": "820cd9816070d366e0eac3ce.jpg",
+    "table": "certifications",
+    "col": "imageUrl",
+    "id": "1765117418034",
+    "kind": "jpg",
+    "maxDim": 1600,
+    "quality": 84,
+    "rawBytes": 24643
+  },
+  {
+    "file": "01cbfa6256f5551c6664fb36.jpg",
+    "table": "certifications",
+    "col": "imageUrl",
+    "id": "1765118137875",
+    "kind": "jpg",
+    "maxDim": 1600,
+    "quality": 84,
+    "rawBytes": 104467
+  },
+  {
+    "file": "8541889f1fb0e772066103da.jpg",
+    "table": "certifications",
+    "col": "imageUrl",
+    "id": "1786562367047",
+    "kind": "jpg",
+    "maxDim": 1600,
+    "quality": 84,
+    "rawBytes": 6289475
+  },
+  {
+    "file": "45dea02371c595c5aea234e8.png",
+    "table": "certifications",
+    "col": "issuerLogo",
+    "id": "1786562367047",
+    "kind": "png",
+    "maxDim": 256,
+    "quality": 84,
+    "rawBytes": 142451
+  },
+  {
+    "file": "1ff00f3f0ef5f11889ea4d2e.jpg",
+    "table": "projects",
+    "col": "mainImage",
+    "id": "1764494479143",
+    "kind": "jpg",
+    "maxDim": 1600,
+    "quality": 84,
+    "rawBytes": 1267105
+  },
+  {
+    "file": "d5abfbde71c923d6a6d5fab0.pdf",
+    "table": "projects",
+    "col": "pdfUrl",
+    "id": "1764494479143",
+    "kind": "pdf",
+    "maxDim": 1600,
+    "quality": 84,
+    "rawBytes": 5139390
+  },
+  {
+    "file": "5f2d39802af04fa46fe4f408.jpg",
+    "table": "projects",
+    "col": "mainImage",
+    "id": "1764494499186",
+    "kind": "jpg",
+    "maxDim": 1600,
+    "quality": 84,
+    "rawBytes": 1066850
+  },
+  {
+    "file": "ca9bde55e1d1b52b43d19d8a.pdf",
+    "table": "projects",
+    "col": "pdfUrl",
+    "id": "1764494499186",
+    "kind": "pdf",
+    "maxDim": 1600,
+    "quality": 84,
+    "rawBytes": 174463
+  },
+  {
+    "file": "997248d83ad2d300ff2cd9c7.jpg",
+    "table": "projects",
+    "col": "mainImage",
+    "id": "1786599564563",
+    "kind": "jpg",
+    "maxDim": 1600,
+    "quality": 84,
+    "rawBytes": 1264064
+  },
+  {
+    "file": "5fbe90629e318293bdd5a044.png",
+    "table": "education",
+    "col": "institutionLogo",
+    "id": "1765116869914",
+    "kind": "png",
+    "maxDim": 384,
+    "quality": 84,
+    "rawBytes": 112858
+  },
+  {
+    "file": "24446911471f4b1c775a3e5b.jpg",
+    "table": "education",
+    "col": "degreeImage",
+    "id": "1765116869914",
+    "kind": "jpg",
+    "maxDim": 1600,
+    "quality": 84,
+    "rawBytes": 133616
+  },
+  {
+    "file": "77517041ba44055241d49875.jpg",
+    "table": "testimonials",
+    "col": "image",
+    "id": "1775378054511",
+    "kind": "jpg",
+    "maxDim": 512,
+    "quality": 85,
+    "rawBytes": 1776220
+  },
+  {
+    "file": "0407123d7c41cb32887fa3c5.jpg",
+    "table": "testimonials",
+    "col": "image",
+    "id": "1775379878047",
+    "kind": "jpg",
+    "maxDim": 512,
+    "quality": 85,
+    "rawBytes": 3565178
+  },
+  {
+    "file": "ce8c3c8278c9c16e6f4416f2.jpg",
+    "table": "testimonials",
+    "col": "image",
+    "id": "1786561117635",
+    "kind": "jpg",
+    "maxDim": 512,
+    "quality": 85,
+    "rawBytes": 1291255
+  },
+  {
+    "file": "98c113fc25df53c545fe9992.jpg",
+    "table": "testimonials",
+    "col": "image",
+    "id": "1786561421911",
+    "kind": "jpg",
+    "maxDim": 512,
+    "quality": 85,
+    "rawBytes": 1715467
+  }
+]

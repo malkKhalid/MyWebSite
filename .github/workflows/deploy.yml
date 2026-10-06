@@ -73,7 +73,6 @@ jobs:
           tar -C server \
             --exclude=node_modules \
             --exclude=dist \
-            --exclude=uploads \
             --exclude=database.sqlite \
             --exclude='*.log' \
             -cf - . | tar -C release/server -xf -

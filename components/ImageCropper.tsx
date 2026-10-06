@@ -7,9 +7,11 @@ interface ImageCropperProps {
     onCropComplete: (croppedImageBase64: string) => void;
     onCancel: () => void;
     aspect?: number; // Default 1:1
+    maxDim?: number; // Longest side of the output (keeps uploads small)
+    format?: 'jpg' | 'png'; // jpg = white background, png = keeps transparency
 }
 
-const ImageCropper: React.FC<ImageCropperProps> = ({ imageSrc, onCropComplete, onCancel, aspect = 1 }) => {
+const ImageCropper: React.FC<ImageCropperProps> = ({ imageSrc, onCropComplete, onCancel, aspect = 1, maxDim = 1400, format = 'jpg' }) => {
     const [crop, setCrop] = useState({ x: 0, y: 0 });
     const [zoom, setZoom] = useState(1);
     const [currentAspect, setCurrentAspect] = useState<number | undefined>(aspect);
@@ -45,8 +47,19 @@ const ImageCropper: React.FC<ImageCropperProps> = ({ imageSrc, onCropComplete, o
             return '';
         }
 
-        canvas.width = pixelCrop.width;
-        canvas.height = pixelCrop.height;
+        const scale = Math.min(1, maxDim / Math.max(pixelCrop.width, pixelCrop.height));
+        const outW = Math.max(1, Math.round(pixelCrop.width * scale));
+        const outH = Math.max(1, Math.round(pixelCrop.height * scale));
+
+        canvas.width = outW;
+        canvas.height = outH;
+
+        if (format === 'jpg') {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, outW, outH);
+        }
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
 
         ctx.drawImage(
             image,
@@ -56,11 +69,11 @@ const ImageCropper: React.FC<ImageCropperProps> = ({ imageSrc, onCropComplete, o
             pixelCrop.height,
             0,
             0,
-            pixelCrop.width,
-            pixelCrop.height
+            outW,
+            outH
         );
 
-        return canvas.toDataURL('image/png');
+        return format === 'png' ? canvas.toDataURL('image/png') : canvas.toDataURL('image/jpeg', 0.86);
     };
 
     const handleSave = async () => {

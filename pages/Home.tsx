@@ -461,9 +461,7 @@ const Home: React.FC = () => {
             transition={{ duration: 0.8 }}
             className="flex justify-center md:justify-start"
           >
-            <div className="relative w-56 sm:w-64 lg:w-72 aspect-[3/4] rounded-3xl p-[4px] overflow-hidden shadow-[0_0_40px_rgb(var(--color-primary)/0.35)]">
-              {/* Rotating Light Border */}
-              <div className="absolute -inset-[150%] animate-border-flow bg-[conic-gradient(from_0deg,rgb(var(--color-primary))_0deg,rgb(var(--color-primary))_70deg,transparent_130deg,transparent_230deg,#C8A2C8_300deg,transparent_360deg)]"></div>
+            <div className="relative w-56 sm:w-64 lg:w-72 aspect-[3/4] rounded-3xl p-[4px] overflow-hidden bg-[conic-gradient(rgb(var(--color-primary)),#C8A2C8,rgb(var(--color-primary)))] shadow-[0_0_40px_rgb(var(--color-primary)/0.35)]">
               {/* Static Inner Image */}
               <div className="relative h-full w-full rounded-[calc(1.5rem-4px)] overflow-hidden bg-gradient-to-br from-maroon/10 to-lavender/10 dark:bg-gray-800">
                 {settings.profileImage ? (
@@ -1120,7 +1118,7 @@ const Home: React.FC = () => {
 
                 {selectedCert.imageUrl && (
                   <div className="mb-6 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 shadow-sm">
-                    {selectedCert.imageUrl.startsWith('data:application/pdf') ? (
+                    {(selectedCert.imageUrl.startsWith('data:application/pdf') || /\.pdf([?#].*)?$/i.test(selectedCert.imageUrl)) ? (
                       <object data={selectedCert.imageUrl} type="application/pdf" className="w-full h-[60vh] min-h-[400px]">
                         <p className="p-4 text-center text-gray-500">PDF cannot be displayed natively. <a href={selectedCert.imageUrl} download="Certificate.pdf" className="text-maroon underline">Download PDF</a></p>
                       </object>
@@ -1215,6 +1213,8 @@ const Home: React.FC = () => {
           <ImageCropper
             imageSrc={cropperImage}
             aspect={1}
+            maxDim={512}
+            format="jpg"
             onCancel={() => setCropperOpen(false)}
             onCropComplete={(croppedImage) => {
               cropperCallback(croppedImage);

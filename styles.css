@@ -1,0 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Default Primary Color (Pink): 219 39 119 (#db2777) */
+  --color-primary: 219 39 119;
+  --color-text-main: 55 65 81; /* #374151 */
+  --color-bg-main: 250 250 250; /* #FAFAFA */
+  --color-bg-card: 255 255 255; /* #FFFFFF */
+}
+
+.dark {
+  --color-text-main: 229 231 235; /* #E5E7EB */
+  --color-bg-main: 17 24 39; /* #111827 */
+  --color-bg-card: 31 41 55; /* #1F2937 */
+}
+
+body {
+  background-color: transparent;
+  color: rgb(var(--color-text-main));
+  overflow-x: hidden;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #C8A2C8;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--color-primary));
+}
+
+.cyber-grid {
+  background-size: 40px 40px;
+  background-image: linear-gradient(to right, rgba(200, 162, 200, 0.05) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(200, 162, 200, 0.05) 1px, transparent 1px);
+}

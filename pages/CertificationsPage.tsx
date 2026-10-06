@@ -88,7 +88,7 @@ const CertificationsPage: React.FC = () => {
                    {/* Certificate Image */}
                    {selectedCert.imageUrl && (
                        <div className="mb-6 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 shadow-sm">
-                           {selectedCert.imageUrl.startsWith('data:application/pdf') ? (
+                            {(selectedCert.imageUrl.startsWith('data:application/pdf') || /\.pdf([?#].*)?$/i.test(selectedCert.imageUrl)) ? (
                              <object data={selectedCert.imageUrl} type="application/pdf" className="w-full h-[60vh] min-h-[400px]">
                                <p className="p-4 text-center text-gray-500">PDF cannot be displayed natively. <a href={selectedCert.imageUrl} download="Certificate.pdf" className="text-maroon underline">Download PDF</a></p>
                              </object>

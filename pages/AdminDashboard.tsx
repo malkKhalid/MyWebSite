@@ -57,6 +57,8 @@ const AdminDashboard: React.FC = () => {
     const [cropperImage, setCropperImage] = useState<string>('');
     const [cropperCallback, setCropperCallback] = useState<(base64: string) => void>(() => { });
     const [cropperAspect, setCropperAspect] = useState(1);
+    const [cropperMaxDim, setCropperMaxDim] = useState(1400);
+    const [cropperFormat, setCropperFormat] = useState<'jpg' | 'png'>('jpg');
 
     const handleLogout = () => {
         logout();
@@ -257,7 +259,7 @@ const AdminDashboard: React.FC = () => {
     };
 
     // Helper for File Upload to Base64 with Cropping
-    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, callback: (base64: string) => void, aspect: number = 1) => {
+    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, callback: (base64: string) => void, aspect: number = 1, opts?: { maxDim?: number; format?: 'jpg' | 'png' }) => {
         const file = e.target.files?.[0];
         if (file) {
             const reader = new FileReader();
@@ -266,12 +268,46 @@ const AdminDashboard: React.FC = () => {
                     setCropperImage(reader.result);
                     setCropperCallback(() => callback); // Wrap in function to avoid immediate execution issues
                     setCropperAspect(aspect);
+                    setCropperMaxDim(opts?.maxDim ?? 1400);
+                    setCropperFormat(opts?.format ?? 'jpg');
                     setCropperOpen(true);
                 }
             };
             reader.readAsDataURL(file);
         }
         // Reset input so same file can be selected again
+        e.target.value = '';
+    };
+
+    // Compress an image without cropping (large scans, certificates, ...)
+    const handleCompressUpload = (e: React.ChangeEvent<HTMLInputElement>, callback: (base64: string) => void, maxDim: number = 1600, quality: number = 0.84, format: 'jpg' | 'png' = 'jpg') => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const result = typeof reader.result === 'string' ? reader.result : '';
+                if (!result || !file.type.startsWith('image/')) { callback(result); return; }
+                const img = new Image();
+                img.onload = () => {
+                    const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+                    const w = Math.max(1, Math.round(img.width * scale));
+                    const h = Math.max(1, Math.round(img.height * scale));
+                    const canvas = document.createElement('canvas');
+                    canvas.width = w; canvas.height = h;
+                    const ctx = canvas.getContext('2d');
+                    if (!ctx) { callback(result); return; }
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, w, h);
+                    ctx.imageSmoothingEnabled = true;
+                    ctx.imageSmoothingQuality = 'high';
+                    ctx.drawImage(img, 0, 0, w, h);
+                    callback(format === 'png' ? canvas.toDataURL('image/png') : canvas.toDataURL('image/jpeg', quality));
+                };
+                img.onerror = () => callback(result);
+                img.src = result;
+            };
+            reader.readAsDataURL(file);
+        }
         e.target.value = '';
     };
 
@@ -637,7 +673,7 @@ const AdminDashboard: React.FC = () => {
                                             <div className="flex items-center gap-2">
                                                 <label className="cursor-pointer bg-gray-100 border border-gray-300 px-3 py-2 rounded text-sm hover:bg-gray-200 flex items-center gap-2 flex-1">
                                                     <Upload className="w-4 h-4" /> Upload Profile
-                                                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, (base64) => setTempSettings({ ...tempSettings, profileImage: base64 }), 3 / 4)} />
+                                                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, (base64) => setTempSettings({ ...tempSettings, profileImage: base64 }), 3 / 4, { maxDim: 1200, format: 'jpg' })} />
                                                 </label>
                                                 {tempSettings.profileImage && <img src={tempSettings.profileImage} className="w-10 h-10 rounded-full object-cover border" />}
                                             </div>
@@ -647,7 +683,7 @@ const AdminDashboard: React.FC = () => {
                                             <div className="flex items-center gap-2">
                                                 <label className="cursor-pointer bg-gray-100 border border-gray-300 px-3 py-2 rounded text-sm hover:bg-gray-200 flex items-center gap-2 flex-1">
                                                     <Upload className="w-4 h-4" /> Upload Logo
-                                                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, (base64) => setTempSettings({ ...tempSettings, logoImage: base64 }))} />
+                                                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, (base64) => setTempSettings({ ...tempSettings, logoImage: base64 }), 1, { maxDim: 512, format: 'png' })} />
                                                 </label>
                                                 {tempSettings.logoImage && <img src={tempSettings.logoImage} className="w-10 h-10 object-contain border rounded bg-gray-50" />}
                                             </div>
@@ -775,7 +811,7 @@ const AdminDashboard: React.FC = () => {
                                             <div className="flex items-center gap-2">
                                                 <label className="cursor-pointer bg-gray-100 border border-gray-300 px-3 py-2 rounded text-sm hover:bg-gray-200 flex items-center gap-2 flex-1 justify-center">
                                                     <Upload className="w-4 h-4" /> Upload Logo
-                                                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, (base64) => setNewEdu(prev => ({ ...prev, institutionLogo: base64 })))} />
+                                                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, (base64) => setNewEdu(prev => ({ ...prev, institutionLogo: base64 })), 1, { maxDim: 384, format: 'png' })} />
                                                 </label>
                                                 {newEdu.institutionLogo && <img src={newEdu.institutionLogo} className="w-10 h-10 object-contain border rounded bg-white" />}
                                             </div>
@@ -785,7 +821,7 @@ const AdminDashboard: React.FC = () => {
                                             <div className="flex items-center gap-2">
                                                 <label className="cursor-pointer bg-gray-100 border border-gray-300 px-3 py-2 rounded text-sm hover:bg-gray-200 flex items-center gap-2 flex-1 justify-center">
                                                     <Upload className="w-4 h-4" /> Upload Certificate
-                                                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handleRawFileUpload(e, (base64) => setNewEdu(prev => ({ ...prev, degreeImage: base64 })))} />
+                                                     <input type="file" accept="image/*" className="hidden" onChange={(e) => handleCompressUpload(e, (base64) => setNewEdu(prev => ({ ...prev, degreeImage: base64 })), 1600, 0.84)} />
                                                 </label>
                                                 {newEdu.degreeImage && <img src={newEdu.degreeImage} className="w-10 h-10 object-contain border rounded" />}
                                             </div>
@@ -881,7 +917,7 @@ const AdminDashboard: React.FC = () => {
                                             <input
                                                 type="file"
                                                 accept="image/*"
-                                                onChange={(e) => handleFileUpload(e, (base64) => setNewSocial({ ...newSocial, customIcon: base64 }))}
+                                                onChange={(e) => handleFileUpload(e, (base64) => setNewSocial({ ...newSocial, customIcon: base64 }), 1, { maxDim: 256, format: 'png' })}
                                                 className="hidden"
                                             />
                                         </label>
@@ -1091,7 +1127,7 @@ const AdminDashboard: React.FC = () => {
                                                 <div className="flex items-center gap-2">
                                                     <label className="cursor-pointer bg-gray-100 border border-gray-300 px-3 py-2 rounded text-sm hover:bg-gray-200 flex items-center gap-2 flex-1">
                                                         <ImageIcon className="w-4 h-4" /> Company Logo
-                                                        <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, (base64) => setNewExpItem({ ...newExpItem, logo: base64 }))} />
+                                                        <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, (base64) => setNewExpItem({ ...newExpItem, logo: base64 }), 1, { maxDim: 256, format: 'png' })} />
                                                     </label>
                                                     {newExpItem.logo && <img src={newExpItem.logo} className="w-10 h-10 object-contain border rounded" />}
                                                 </div>
@@ -1161,14 +1197,14 @@ const AdminDashboard: React.FC = () => {
                                         <div className="flex items-center gap-2">
                                             <label className="cursor-pointer bg-gray-100 border border-gray-300 px-3 py-2 rounded text-sm hover:bg-gray-200 flex items-center gap-2 flex-1">
                                                 <ImageIcon className="w-4 h-4" /> Upload Certificate (Image)
-                                                <input type="file" accept="image/*" className="hidden" onChange={(e) => handleRawFileUpload(e, (base64) => setNewCert({ ...newCert, imageUrl: base64 }))} />
+                                                 <input type="file" accept="image/*,.pdf,application/pdf" className="hidden" onChange={(e) => handleCompressUpload(e, (base64) => setNewCert({ ...newCert, imageUrl: base64 }), 1600, 0.84)} />
                                             </label>
                                             {newCert.imageUrl && <img src={newCert.imageUrl} alt="cert preview" className="w-12 h-12 object-contain rounded border" />}
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <label className="cursor-pointer bg-gray-100 border border-gray-300 px-3 py-2 rounded text-sm hover:bg-gray-200 flex items-center gap-2">
                                                 <ImageIcon className="w-4 h-4" /> Issuer Logo
-                                                <input type="file" accept="image/*" className="hidden" onChange={(e) => handleRawFileUpload(e, (base64) => setNewCert({ ...newCert, issuerLogo: base64 }))} />
+                                                 <input type="file" accept="image/*" className="hidden" onChange={(e) => handleCompressUpload(e, (base64) => setNewCert({ ...newCert, issuerLogo: base64 }), 256, 1, 'png')} />
                                             </label>
                                             {newCert.issuerLogo && <img src={newCert.issuerLogo} alt="preview" className="w-10 h-10 object-contain rounded border" />}
                                         </div>
@@ -1239,7 +1275,7 @@ const AdminDashboard: React.FC = () => {
                                                 </select>
                                                 <label className="cursor-pointer bg-gray-100 border border-gray-300 px-3 py-2 rounded text-sm hover:bg-gray-200 flex items-center gap-1 shrink-0" title="Upload Custom Icon">
                                                     <ImageIcon className="w-4 h-4" /> Upload
-                                                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handleRawFileUpload(e, (base64) => setNewSkill({ ...newSkill, image: base64 }))} />
+                                                     <input type="file" accept="image/*" className="hidden" onChange={(e) => handleCompressUpload(e, (base64) => setNewSkill({ ...newSkill, image: base64 }), 256, 1, 'png')} />
                                                 </label>
                                             </div>
                                             {newSkill.image && (
@@ -1293,12 +1329,12 @@ const AdminDashboard: React.FC = () => {
 
                                         <div className="md:col-span-2">
                                             <label className="text-xs font-bold text-gray-500 uppercase block mb-1">Main Cover Image</label>
-                                            <input type="file" accept="image/*" onChange={(e) => handleFileUpload(e, (base64) => setNewProject({ ...newProject, mainImage: base64 }))} />
+                                            <input type="file" accept="image/*" onChange={(e) => handleFileUpload(e, (base64) => setNewProject({ ...newProject, mainImage: base64 }), 1, { maxDim: 1600, format: 'jpg' })} />
                                             {newProject.mainImage && <img src={newProject.mainImage} className="mt-2 h-20 rounded border" alt="preview" />}
                                         </div>
                                         <div className="md:col-span-2">
                                             <label className="text-xs font-bold text-gray-500 uppercase block mb-1">Project PDF File</label>
-                                            <input type="file" accept="application/pdf" onChange={(e) => handleFileUpload(e, (base64) => setNewProject({ ...newProject, pdfUrl: base64 }))} />
+                                            <input type="file" accept="application/pdf" onChange={(e) => handleRawFileUpload(e, (base64) => setNewProject({ ...newProject, pdfUrl: base64 }))} />
                                             {newProject.pdfUrl && <p className="text-xs text-green-600 mt-1">PDF Loaded</p>}
                                         </div>
 
@@ -1436,6 +1472,8 @@ const AdminDashboard: React.FC = () => {
                 <ImageCropper
                     imageSrc={cropperImage}
                     aspect={cropperAspect}
+                    maxDim={cropperMaxDim}
+                    format={cropperFormat}
                     onCancel={() => setCropperOpen(false)}
                     onCropComplete={(croppedImage) => {
                         cropperCallback(croppedImage);

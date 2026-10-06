@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import path from 'path';
 import fs from 'fs';
+import crypto from 'crypto';
 import multer from 'multer';
 import db, { initDb } from './db';
 import { GoogleGenAI } from '@google/genai';
@@ -15,7 +16,33 @@ const PORT = process.env.PORT || 3001;
 // Middleware
 app.use(cors());
 app.use(express.json({ limit: '50mb' })); // Increased limit for base64 images
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+const UPLOADS_DIR = path.join(__dirname, 'uploads');
+fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+app.use('/uploads', express.static(UPLOADS_DIR));
+
+// Write base64 uploads to /uploads and store the URL instead, so API
+// responses stay small (they used to be tens of MB of inline base64).
+const saveDataUrl = (value: any): any => {
+    if (typeof value !== 'string' || !value.startsWith('data:')) return value;
+    const m = value.match(/^data:([A-Za-z0-9/+.-]+);base64,([\s\S]*)$/);
+    if (!m) return value;
+    const mime = m[1];
+    const buf = Buffer.from(m[2], 'base64');
+    if (!buf.length) return value;
+    const ext = mime === 'application/pdf' ? 'pdf'
+        : mime === 'image/png' ? 'png'
+        : mime === 'image/webp' ? 'webp'
+        : mime === 'image/gif' ? 'gif'
+        : 'jpg';
+    const name = crypto.createHash('sha1').update(buf).digest('hex').slice(0, 24) + '.' + ext;
+    try {
+        fs.writeFileSync(path.join(UPLOADS_DIR, name), buf);
+        return '/uploads/' + name;
+    } catch (e) {
+        console.error('Failed to persist upload:', e);
+        return value;
+    }
+};
 
 // Serve the built frontend (production)
 const distPath = path.join(__dirname, '..', 'dist');
@@ -59,6 +86,8 @@ app.post('/api/settings', (req, res) => {
     const merged = { ...(current || {}), ...clean(s) };
 
     const totalVisits = typeof s.totalVisits === 'number' ? s.totalVisits : (current?.totalVisits ?? 100);
+    const profileImage = saveDataUrl(merged.profileImage);
+    const logoImage = saveDataUrl(merged.logoImage);
 
     db.prepare(`
         UPDATE settings SET 
@@ -68,8 +97,8 @@ app.post('/api/settings', (req, res) => {
         WHERE id = 1
     `).run(
         merged.siteNameEn ?? null, merged.siteNameAr ?? null, merged.fullNameEn ?? null, merged.fullNameAr ?? null,
-        merged.profileImage ?? null, merged.primaryColorRGB ?? null, merged.contactPhone ?? null, merged.aiContext ?? null,
-        merged.logoImage ?? null, merged.heroTitleEn ?? null, merged.heroTitleAr ?? null, merged.heroSubtitleEn ?? null,
+        profileImage ?? null, merged.primaryColorRGB ?? null, merged.contactPhone ?? null, merged.aiContext ?? null,
+        logoImage ?? null, merged.heroTitleEn ?? null, merged.heroTitleAr ?? null, merged.heroSubtitleEn ?? null,
         merged.heroSubtitleAr ?? null, merged.siteSubtitleEn ?? null, merged.siteSubtitleAr ?? null,
         merged.aboutTextEn ?? null, merged.aboutTextAr ?? null, merged.copyrightOwnerName ?? null, merged.contactEmail ?? null,
         totalVisits
@@ -105,7 +134,7 @@ app.post('/api/socials', (req, res) => {
     db.transaction(() => {
         deleteStmt.run();
         for (const link of links) {
-            insertStmt.run(link.id, link.platform, link.url, link.customIcon, link.isActive ? 1 : 0);
+            insertStmt.run(link.id, link.platform, link.url, saveDataUrl(link.customIcon), link.isActive ? 1 : 0);
         }
     })();
     res.json({ success: true });
@@ -125,7 +154,7 @@ app.post('/api/skills', (req, res) => {
     db.transaction(() => {
         deleteStmt.run();
         for (const item of items) {
-            insertStmt.run(item.id, item.iconName, item.titleEn, item.titleAr, item.descEn, item.descAr, item.detailsEn, item.detailsAr, item.price, item.image);
+            insertStmt.run(item.id, item.iconName, item.titleEn, item.titleAr, item.descEn, item.descAr, item.detailsEn, item.detailsAr, item.price, saveDataUrl(item.image));
         }
     })();
     res.json({ success: true });
@@ -145,7 +174,7 @@ app.post('/api/certifications', (req, res) => {
     db.transaction(() => {
         deleteStmt.run();
         for (const item of items) {
-            insertStmt.run(item.id, item.name, item.org, item.date, item.descEn, item.descAr, item.imageUrl || '', item.issuerLogo || '', item.orderNum || 0, item.featured ? 1 : 0);
+            insertStmt.run(item.id, item.name, item.org, item.date, item.descEn, item.descAr, saveDataUrl(item.imageUrl) || '', saveDataUrl(item.issuerLogo) || '', item.orderNum || 0, item.featured ? 1 : 0);
         }
     })();
     res.json({ success: true });
@@ -172,8 +201,8 @@ app.post('/api/projects', (req, res) => {
         for (const item of items) {
             insertStmt.run(
                 item.id, item.titleEn, item.titleAr, item.descEn, item.descAr,
-                item.longDescEn, item.longDescAr, item.mainImage, item.pdfUrl,
-                JSON.stringify(item.tags), JSON.stringify(item.galleryImages),
+                item.longDescEn, item.longDescAr, saveDataUrl(item.mainImage), saveDataUrl(item.pdfUrl),
+                JSON.stringify(item.tags), JSON.stringify((item.galleryImages || []).map(saveDataUrl)),
                 item.orderNum || 0, item.featured ? 1 : 0
             );
         }
@@ -214,13 +243,15 @@ app.get('/api/education', (req, res) => {
 
 app.post('/api/education', (req, res) => {
     const { id, degreeEn, degreeAr, institutionEn, institutionAr, date, gradeEn, gradeAr, institutionLogo, descriptionEn, descriptionAr, degreeImage } = req.body;
+    const logo = saveDataUrl(institutionLogo);
+    const degreeImg = saveDataUrl(degreeImage);
     const existing = db.prepare('SELECT id FROM education WHERE id = ?').get(id);
     if (existing) {
         db.prepare(`UPDATE education SET degreeEn=?, degreeAr=?, institutionEn=?, institutionAr=?, date=?, gradeEn=?, gradeAr=?, institutionLogo=?, descriptionEn=?, descriptionAr=?, degreeImage=? WHERE id=?`)
-            .run(degreeEn, degreeAr, institutionEn, institutionAr, date, gradeEn, gradeAr, institutionLogo, descriptionEn, descriptionAr, degreeImage, id);
+            .run(degreeEn, degreeAr, institutionEn, institutionAr, date, gradeEn, gradeAr, logo, descriptionEn, descriptionAr, degreeImg, id);
     } else {
         db.prepare(`INSERT INTO education (id, degreeEn, degreeAr, institutionEn, institutionAr, date, gradeEn, gradeAr, institutionLogo, descriptionEn, descriptionAr, degreeImage) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-            .run(id, degreeEn, degreeAr, institutionEn, institutionAr, date, gradeEn, gradeAr, institutionLogo, descriptionEn, descriptionAr, degreeImage);
+            .run(id, degreeEn, degreeAr, institutionEn, institutionAr, date, gradeEn, gradeAr, logo, descriptionEn, descriptionAr, degreeImg);
     }
     res.json({ success: true });
 });
@@ -299,7 +330,7 @@ app.post('/api/testimonials', (req, res) => {
         countryAr || '',
         textEn || '',
         textAr || '',
-        image || '',
+        saveDataUrl(image) || '',
         linkedin || '',
         approved ? 1 : 0
     );
@@ -362,7 +393,7 @@ app.post('/api/experience-items', (req, res) => {
     db.transaction(() => {
         deleteStmt.run();
         for (const item of items) {
-            insertStmt.run(item.id, item.categoryId, item.company, item.logo, item.titleEn, item.titleAr, item.duration, item.country, item.descEn, item.descAr, item.orderNum || 0, item.featured ? 1 : 0);
+            insertStmt.run(item.id, item.categoryId, item.company, saveDataUrl(item.logo), item.titleEn, item.titleAr, item.duration, item.country, item.descEn, item.descAr, item.orderNum || 0, item.featured ? 1 : 0);
         }
     })();
     res.json({ success: true });
