@@ -1,0 +1,63 @@
+name: Deploy to Namecheap
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: Deploy to server
+        run: |
+          ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
+            cd ${{ secrets.APP_PATH }} && \
+            rm -rf dist server && \
+            echo 'Waiting for files...'
+          "
+
+          # Copy dist folder
+          scp -P ${{ secrets.SSH_PORT }} -r dist ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.APP_PATH }}/
+
+          # Copy server folder
+          scp -P ${{ secrets.SSH_PORT }} -r server ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.APP_PATH }}/
+
+          # Copy .env.local if it exists
+          if [ -f .env.local ]; then
+            scp -P ${{ secrets.SSH_PORT }} .env.local ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.APP_PATH }}/
+          fi
+
+          # Install dependencies and restart
+          ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "
+            cd ${{ secrets.APP_PATH }} && \
+            cd server && \
+            npm install && \
+            echo 'Deployment completed!'
+          "
+
+      - name: Notify deployment status
+        if: always()
+        run: echo "Deployment to ${{ secrets.APP_PATH }} completed!"
