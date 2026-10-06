@@ -132,13 +132,20 @@ jobs:
             fi
           fi
 
-          # Activate the cPanel Node.js selector environment when present
-          for activate in "$HOME"/nodevenv/*/*/bin/activate; do
+          # Activate the cPanel Node.js virtualenv for THIS app when present.
+          # nounset is disabled while sourcing: cPanel/CloudLinux activate
+          # scripts reference unset variables (CL_VIRTUAL_ENV, ...).
+          APP_NAME=$(basename "$APP_PATH")
+          set +u
+          for activate in "$HOME"/nodevenv/"$APP_NAME"/*/bin/activate; do
             if [ -f "$activate" ]; then
+              echo "activating $activate"
               . "$activate"
               break
             fi
           done
+          set -u
+          hash -r 2>/dev/null || true
 
           echo "node: $(command -v node || echo MISSING) $(node -v 2>/dev/null || true)"
           echo "npm:  $(command -v npm || echo MISSING)"
