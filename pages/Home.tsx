@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Shield, Lock, Terminal, Eye, Code, Wifi,
+  Shield, Lock, Terminal, Eye, Code, Wifi, Bug, Bot, Server, Activity,
   ExternalLink, Github, Linkedin, Mail, MessageCircle,
   ChevronRight, Star, Download, Award, X, Upload, Check, Quote,
   ArrowRight, Languages, CheckCircle2, User, GraduationCap, Briefcase, Globe, Calendar, Layout as LayoutIcon, FileText,
@@ -368,8 +368,24 @@ const Home: React.FC = () => {
       case 'Eye': return <Eye className="w-8 h-8" />;
       case 'Code': return <Code className="w-8 h-8" />;
       case 'Wifi': return <Wifi className="w-8 h-8" />;
+      case 'Bug': return <Bug className="w-8 h-8" />;
+      case 'Bot': return <Bot className="w-8 h-8" />;
+      case 'GraduationCap': return <GraduationCap className="w-8 h-8" />;
+      case 'Server': return <Server className="w-8 h-8" />;
+      case 'Activity': return <Activity className="w-8 h-8" />;
       default: return <Shield className="w-8 h-8" />;
     }
+  };
+
+  const certName = (c: Certification) => (language === 'ar' && c.nameAr) ? c.nameAr : c.name;
+  const certOrg = (c: Certification) => (language === 'ar' && c.orgAr) ? c.orgAr : c.org;
+
+  const flagFor = (l: { nameEn: string; nameAr: string }) => {
+    const n = `${l.nameEn} ${l.nameAr}`.toLowerCase();
+    if (n.includes('arab') || n.includes('عرب')) return '/flags/ps.svg';
+    if (n.includes('engl') || n.includes('إنجليز') || n.includes('انجليز')) return '/flags/gb.svg';
+    if (n.includes('fren') || n.includes('فرنس')) return '/flags/fr.svg';
+    return null;
   };
 
   const renderSkillIcon = (skill: Skill) => {
@@ -461,14 +477,14 @@ const Home: React.FC = () => {
             transition={{ duration: 0.8 }}
             className="flex justify-center md:justify-start"
           >
-            <div className="relative w-56 sm:w-64 lg:w-72 aspect-[3/4] rounded-3xl p-[4px] overflow-hidden bg-[conic-gradient(rgb(var(--color-primary)),#C8A2C8,rgb(var(--color-primary)))] shadow-[0_0_40px_rgb(var(--color-primary)/0.35)]">
+            <div className="relative w-56 sm:w-64 lg:w-72 aspect-[9/8] rounded-3xl p-[4px] overflow-hidden bg-[conic-gradient(rgb(var(--color-primary)),#C8A2C8,rgb(var(--color-primary)))] shadow-[0_0_40px_rgb(var(--color-primary)/0.35)]">
               {/* Static Inner Image */}
               <div className="relative h-full w-full rounded-[calc(1.5rem-4px)] overflow-hidden bg-gradient-to-br from-maroon/10 to-lavender/10 dark:bg-gray-800">
                 {settings.profileImage ? (
                   <img
                     src={settings.profileImage}
                     alt="Profile"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover object-top"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
@@ -714,7 +730,7 @@ const Home: React.FC = () => {
               transition={{ delay: idx * 0.1 }}
               className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden border-2 border-pink-200 dark:border-pink-900/50 shadow-[0_0_15px_rgba(236,72,153,0.1)] hover:border-pink-500 hover:shadow-[0_0_20px_rgba(236,72,153,0.3)] transition-all group flex flex-col h-full"
             >
-              <div className="h-48 overflow-hidden relative">
+              <div className="aspect-[4/3] overflow-hidden relative">
                 <img
                   src={project.mainImage || 'https://via.placeholder.com/400x200'}
                   alt={project.titleEn}
@@ -794,8 +810,8 @@ const Home: React.FC = () => {
                   </div>
                 )}
               </div>
-              <h3 className="font-bold text-lg mb-1 text-anthracite dark:text-white">{cert.name}</h3>
-              <p className="text-gray-500 dark:text-gray-400 text-sm mb-2">{cert.org}</p>
+              <h3 className="font-bold text-lg mb-1 text-anthracite dark:text-white">{certName(cert)}</h3>
+              <p className="text-gray-500 dark:text-gray-400 text-sm mb-2">{certOrg(cert)}</p>
               <span className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-3 py-1 rounded-full font-mono border border-gray-200 dark:border-gray-600">
                 {cert.date}
               </span>
@@ -832,7 +848,8 @@ const Home: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {languagesList.map(lang => (
             <div key={lang.id} className="bg-white dark:bg-gray-800 p-6 rounded-xl border-2 border-pink-200 dark:border-pink-900/50 shadow-[0_0_15px_rgba(236,72,153,0.1)] hover:border-pink-500 hover:shadow-[0_0_20px_rgba(236,72,153,0.3)] transition-all text-center">
-              <h3 className="font-bold text-lg text-maroon mb-1">
+              <h3 className="font-bold text-lg text-maroon mb-1 flex items-center justify-center gap-2">
+                {flagFor(lang) && <img src={flagFor(lang)!} alt="" className="w-6 h-4 rounded-sm object-cover shadow-sm shrink-0" />}
                 {language === 'ar' ? lang.nameAr : lang.nameEn}
               </h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
@@ -1112,8 +1129,8 @@ const Home: React.FC = () => {
                       <Award className="w-8 h-8" />
                     )}
                   </div>
-                  <h3 className="text-xl font-bold text-anthracite dark:text-white">{selectedCert.name}</h3>
-                  <p className="text-gray-500 dark:text-gray-400">{selectedCert.org} • {selectedCert.date}</p>
+                  <h3 className="text-xl font-bold text-anthracite dark:text-white">{certName(selectedCert)}</h3>
+                  <p className="text-gray-500 dark:text-gray-400">{certOrg(selectedCert)} • {selectedCert.date}</p>
                 </div>
 
                 {selectedCert.imageUrl && (

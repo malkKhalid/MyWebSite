@@ -4,17 +4,34 @@ import { useApp } from '../context/AppContext';
 
 const CyberBackground: React.FC = () => {
   const { darkMode } = useApp();
-  const [particles, setParticles] = useState<Array<{ id: number; left: string; size: number; duration: number; delay: number }>>([]);
+  const [particles, setParticles] = useState<Array<{ id: number; left: string; size: number; duration: number; delay: number; sway: number }>>([]);
 
   useEffect(() => {
-    const newParticles = Array.from({ length: 20 }).map((_, i) => ({
-      id: i,
-      left: `${Math.random() * 100}%`,
-      size: Math.random() * 20 + 10,
-      duration: Math.random() * 12 + 10,
-      delay: Math.random() * 10,
-    }));
-    setParticles(newParticles);
+    // The balls only live in the left and right quarters of the page, so the reading area stays calm.
+    let lastWidth = 0;
+    const build = () => {
+      const w = window.innerWidth;
+      if (w === lastWidth) return;
+      lastWidth = w;
+      const band = w * 0.25;
+      const sway = Math.min(60, w * 0.06);
+      setParticles(Array.from({ length: 20 }).map((_, i) => {
+        const size = Math.random() * 20 + 10;
+        const start = i % 2 === 0 ? sway : w * 0.75 + sway;
+        const range = Math.max(band - size - sway * 2, 0);
+        return {
+          id: i,
+          left: `${start + Math.random() * range}px`,
+          size,
+          duration: Math.random() * 12 + 10,
+          delay: Math.random() * 10,
+          sway,
+        };
+      }));
+    };
+    build();
+    window.addEventListener('resize', build);
+    return () => window.removeEventListener('resize', build);
   }, []);
 
   return (
@@ -37,7 +54,7 @@ const CyberBackground: React.FC = () => {
           }}
           animate={{
             y: [0, -(window.innerHeight + 100)],
-            x: [0, Math.sin(p.id * 1.5) * 60, Math.cos(p.id) * -40, 0],
+            x: [0, Math.sin(p.id * 1.5) * p.sway, Math.cos(p.id) * -p.sway * 0.67, 0],
             opacity: [0, 1, 1, 0.8, 0],
             scale: [0.5, 1.1, 0.9, 1, 0.7],
           }}

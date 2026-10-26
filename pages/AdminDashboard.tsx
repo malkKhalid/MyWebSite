@@ -180,7 +180,9 @@ const AdminDashboard: React.FC = () => {
                 updateCertifications([...certifications, {
                     id: Date.now().toString(),
                     name: newCert.name,
+                    nameAr: newCert.nameAr || '',
                     org: newCert.org || '',
+                    orgAr: newCert.orgAr || '',
                     date: newCert.date || '',
                     descEn: newCert.descEn,
                     descAr: newCert.descAr,
@@ -1193,6 +1195,8 @@ const AdminDashboard: React.FC = () => {
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                         <input placeholder="Certification Name" className="border p-2 rounded bg-white text-gray-900" value={newCert.name || ''} onChange={e => setNewCert({ ...newCert, name: e.target.value })} />
                                         <input placeholder="Organization" className="border p-2 rounded bg-white text-gray-900" value={newCert.org || ''} onChange={e => setNewCert({ ...newCert, org: e.target.value })} />
+                                        <input placeholder="Certification Name (AR)" className="border p-2 rounded text-right bg-white text-gray-900" value={newCert.nameAr || ''} onChange={e => setNewCert({ ...newCert, nameAr: e.target.value })} />
+                                        <input placeholder="Organization (AR)" className="border p-2 rounded text-right bg-white text-gray-900" value={newCert.orgAr || ''} onChange={e => setNewCert({ ...newCert, orgAr: e.target.value })} />
                                         <input placeholder="Date (e.g. 2023)" className="border p-2 rounded bg-white text-gray-900" value={newCert.date || ''} onChange={e => setNewCert({ ...newCert, date: e.target.value })} />
                                         <div className="flex items-center gap-2">
                                             <label className="cursor-pointer bg-gray-100 border border-gray-300 px-3 py-2 rounded text-sm hover:bg-gray-200 flex items-center gap-2 flex-1">
@@ -1272,6 +1276,11 @@ const AdminDashboard: React.FC = () => {
                                                     <option value="Eye">Eye Icon</option>
                                                     <option value="Code">Code Icon</option>
                                                     <option value="Wifi">Wifi Icon</option>
+                                                    <option value="Bug">Bug Icon</option>
+                                                    <option value="Bot">Bot Icon</option>
+                                                    <option value="GraduationCap">Graduation Cap Icon</option>
+                                                    <option value="Server">Server Icon</option>
+                                                    <option value="Activity">Activity Icon</option>
                                                 </select>
                                                 <label className="cursor-pointer bg-gray-100 border border-gray-300 px-3 py-2 rounded text-sm hover:bg-gray-200 flex items-center gap-1 shrink-0" title="Upload Custom Icon">
                                                     <ImageIcon className="w-4 h-4" /> Upload

@@ -10,6 +10,9 @@ const CertificationsPage: React.FC = () => {
   const { language, certifications } = useApp();
   const [selectedCert, setSelectedCert] = useState<Certification | null>(null);
 
+  const certName = (c: Certification) => (language === 'ar' && c.nameAr) ? c.nameAr : c.name;
+  const certOrg = (c: Certification) => (language === 'ar' && c.orgAr) ? c.orgAr : c.org;
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-12 bg-off-white dark:bg-gray-900 min-h-screen">
       <motion.div
@@ -37,10 +40,10 @@ const CertificationsPage: React.FC = () => {
                   ? <img src={cert.issuerLogo} alt={cert.org} className="w-10 h-10 object-contain rounded border bg-white p-0.5 shrink-0" />
                   : <Award className="w-6 h-6 text-maroon shrink-0" />
                 }
-                <h3 className="font-bold text-lg text-gray-800 dark:text-white flex-1">{cert.name}</h3>
+                <h3 className="font-bold text-lg text-gray-800 dark:text-white flex-1">{certName(cert)}</h3>
              </div>
              <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 w-full mb-2">
-               <span className="font-semibold">{cert.org}</span>
+               <span className="font-semibold">{certOrg(cert)}</span>
                <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
                <span>{cert.date}</span>
              </div>
@@ -81,8 +84,8 @@ const CertificationsPage: React.FC = () => {
                           : <Award className="w-8 h-8 text-maroon" />
                         }
                       </div>
-                     <h3 className="text-xl font-bold text-anthracite dark:text-white">{selectedCert.name}</h3>
-                     <p className="text-gray-500 dark:text-gray-400">{selectedCert.org} • {selectedCert.date}</p>
+                     <h3 className="text-xl font-bold text-anthracite dark:text-white">{certName(selectedCert)}</h3>
+                     <p className="text-gray-500 dark:text-gray-400">{certOrg(selectedCert)} • {selectedCert.date}</p>
                    </div>
                    
                    {/* Certificate Image */}

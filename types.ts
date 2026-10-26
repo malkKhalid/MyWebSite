@@ -87,7 +87,9 @@ export interface Project {
 export interface Certification {
   id: string;
   name: string;
+  nameAr?: string;
   org: string;
+  orgAr?: string;
   date: string;
   credentialId?: string;
   descEn?: string;

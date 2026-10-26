@@ -169,12 +169,12 @@ app.get('/api/certifications', (req, res) => {
 app.post('/api/certifications', (req, res) => {
     const items = req.body;
     const deleteStmt = db.prepare('DELETE FROM certifications');
-    const insertStmt = db.prepare('INSERT INTO certifications (id, name, org, date, descEn, descAr, imageUrl, issuerLogo, orderNum, featured) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+    const insertStmt = db.prepare('INSERT INTO certifications (id, name, org, date, descEn, descAr, imageUrl, issuerLogo, orderNum, featured, nameAr, orgAr) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
 
     db.transaction(() => {
         deleteStmt.run();
         for (const item of items) {
-            insertStmt.run(item.id, item.name, item.org, item.date, item.descEn, item.descAr, saveDataUrl(item.imageUrl) || '', saveDataUrl(item.issuerLogo) || '', item.orderNum || 0, item.featured ? 1 : 0);
+            insertStmt.run(item.id, item.name, item.org, item.date, item.descEn, item.descAr, saveDataUrl(item.imageUrl) || '', saveDataUrl(item.issuerLogo) || '', item.orderNum || 0, item.featured ? 1 : 0, item.nameAr || '', item.orgAr || '');
         }
     })();
     res.json({ success: true });

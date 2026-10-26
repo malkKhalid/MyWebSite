@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Shield, Lock, Terminal, Eye, Code, Wifi, X, MessageCircle, Mail } from 'lucide-react';
+import { Shield, Lock, Terminal, Eye, Code, Wifi, Bug, Bot, GraduationCap, Server, Activity, X, MessageCircle, Mail } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Skill } from '../types';
 
@@ -22,6 +22,11 @@ const ServicesPage: React.FC = () => {
       case 'Eye': return <Eye className="w-8 h-8" />;
       case 'Code': return <Code className="w-8 h-8" />;
       case 'Wifi': return <Wifi className="w-8 h-8" />;
+      case 'Bug': return <Bug className="w-8 h-8" />;
+      case 'Bot': return <Bot className="w-8 h-8" />;
+      case 'GraduationCap': return <GraduationCap className="w-8 h-8" />;
+      case 'Server': return <Server className="w-8 h-8" />;
+      case 'Activity': return <Activity className="w-8 h-8" />;
       default: return <Shield className="w-8 h-8" />;
     }
   };

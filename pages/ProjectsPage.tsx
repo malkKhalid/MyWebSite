@@ -34,7 +34,7 @@ const ProjectsPage: React.FC = () => {
             className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden hover:shadow-xl transition-all duration-300 group flex flex-col h-full"
           >
             {/* Image Thumbnail */}
-            <div className="h-48 overflow-hidden relative">
+            <div className="aspect-[4/3] overflow-hidden relative">
                  <img 
                     src={project.mainImage || 'https://via.placeholder.com/400x200'} 
                     alt={project.titleEn} 

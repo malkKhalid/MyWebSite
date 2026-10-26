@@ -272,6 +272,9 @@ export const initDb = () => {
     try { db.exec("ALTER TABLE certifications ADD COLUMN issuerLogo TEXT"); } catch (e) { }
     // The skills table predates the `image` column that POST /api/skills inserts into
     try { db.exec("ALTER TABLE skills ADD COLUMN image TEXT"); } catch (e) { }
+    // Arabic display name / organization for certifications
+    try { db.exec("ALTER TABLE certifications ADD COLUMN nameAr TEXT"); } catch (e) { }
+    try { db.exec("ALTER TABLE certifications ADD COLUMN orgAr TEXT"); } catch (e) { }
 
     console.log('Database initialized successfully.');
 };
