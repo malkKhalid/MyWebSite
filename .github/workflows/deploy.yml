@@ -144,6 +144,9 @@ jobs:
           set -euo pipefail
           cd "$APP_PATH"
 
+          # One-off cleanup: this upload was deleted from the repository, so remove it from the server too
+          rm -f server/uploads/24446911471f4b1c775a3e5b.jpg
+
           # Keep the live database: only use the shipped snapshot on first deploy
           if [ -f server/database.sqlite.uploaded ]; then
             if [ -f server/database.sqlite ]; then
